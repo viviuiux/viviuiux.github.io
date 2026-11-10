@@ -260,6 +260,11 @@ video[data-lb]{background:#ECECEC}
 /* case card hover: the cover zooms 3.5 % inside its frame (mouse / trackpad only, not with reduced motion) */
 .ph-clip{display:block;overflow:hidden}
 @media (min-width:768px){.stk-stage{gap:40px}}
+/* phones: the header slides away on a long scroll down (back on any scroll up); in cases its 2 px progress line stays */
+@media (max-width:767px){
+html .pg.hdr-hide .logo{transform:translateY(-56px)!important;pointer-events:none!important}
+html .pg.hdr-hide .logo:has(.rp){transform:translateY(-54px)!important}
+}
 /* In-app browsers (Telegram, Instagram…) draw their bars over the page and show what is beyond the screen edges there:
    page-coloured bands just outside the top and bottom edge fill that area (red while the loader plays). */
 .edge{position:fixed;left:0;right:0;height:320px;background:#F6F5F1;z-index:57;pointer-events:none}
@@ -430,9 +435,10 @@ window.addEventListener('scroll', onHdr, { passive: true }); onHdr();
       + '<button class="lb-x" aria-label="Close"><span></span></button>';
     const badge = document.createElement('div'); badge.className = 'lb-badge'; badge.innerHTML = EXP;
     document.body.append(lb, badge);
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach((t) => lb.addEventListener(t, (e) => e.preventDefault())); // no Safari page zoom over the lightbox
     const stage = lb.querySelector('.lb-stage'), big = lb.querySelector('.lb-img'), cnt = lb.querySelector('.lb-cnt'), xb = lb.querySelector('.lb-x'), vid = lb.querySelector('.lb-vid');
     let i = 0, on = false, s = 1, tx = 0, ty = 0, moved = false, lastTap = 0, ret = null, ct = 0;
-    const box = () => { const r = big.getBoundingClientRect(); return { cx: r.left + r.width / 2 - tx, cy: r.top + r.height / 2 - ty, w: r.width / s, h: r.height / s }; };
+    const box = () => ({ cx: big.offsetLeft + big.offsetWidth / 2, cy: big.offsetTop + big.offsetHeight / 2, w: big.offsetWidth, h: big.offsetHeight }); // layout box: pinch no longer drifts
     const apply = (anim) => {
       if (s <= 1) { s = 1; tx = 0; ty = 0; } else { const b = box(), mx = Math.max(0, (b.w * s - innerWidth) / 2 + 24), my = Math.max(0, (b.h * s - innerHeight) / 2 + 24); tx = Math.max(-mx, Math.min(mx, tx)); ty = Math.max(-my, Math.min(my, ty)); }
       big.style.transition = anim ? 'transform .25s ease, opacity .25s ease' : 'none';

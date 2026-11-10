@@ -180,6 +180,9 @@ function lightboxPatch(js) {
         big.src = low; big.alt = it.alt || '';
         if (hi) { const pre = new Image(); pre.onload = () => { if (imgs[i] === it) { big.onload = null; big.src = hi; } }; pre.src = hi; }
         if (big.complete) big.onload(); }`],
+    [`const box = () => { const r = big.getBoundingClientRect(); return { cx: r.left + r.width / 2 - tx, cy: r.top + r.height / 2 - ty, w: r.width / s, h: r.height / s }; };`,
+      `const box = () => ({ cx: big.offsetLeft + big.offsetWidth / 2, cy: big.offsetTop + big.offsetHeight / 2, w: big.offsetWidth, h: big.offsetHeight }); // layout box: pinch no longer drifts`],
+    [`document.body.append(lb, badge);`, `document.body.append(lb, badge);\n    ['gesturestart', 'gesturechange', 'gestureend'].forEach((t) => lb.addEventListener(t, (e) => e.preventDefault())); // no Safari page zoom over the lightbox`],
     [`const zoomAt = (k, px, py, anim) => {`, `const zoomAt = (k, px, py, anim) => { if (big.hidden) return;`],
     [`const close = () => { if (!on) return; on = false;`, `const close = () => { if (!on) return; on = false; vid.pause();`],
     [`ct = setTimeout(() => { if (on && s === 1) close(); }, 300)`, `ct = setTimeout(() => { if (on && s === 1) close(); }, 180)`],
@@ -313,6 +316,11 @@ video[data-lb]{background:#ECECEC}
 /* case card hover: the cover zooms 3.5 % inside its frame (mouse / trackpad only, not with reduced motion) */
 .ph-clip{display:block;overflow:hidden}
 @media (min-width:768px){.stk-stage{gap:40px}}
+/* phones: the header slides away on a long scroll down (back on any scroll up); in cases its 2 px progress line stays */
+@media (max-width:767px){
+html .pg.hdr-hide .logo{transform:translateY(-56px)!important;pointer-events:none!important}
+html .pg.hdr-hide .logo:has(.rp){transform:translateY(-54px)!important}
+}
 /* In-app browsers (Telegram, Instagram…) draw their bars over the page and show what is beyond the screen edges there:
    page-coloured bands just outside the top and bottom edge fill that area (red while the loader plays). */
 .edge{position:fixed;left:0;right:0;height:320px;background:#F6F5F1;z-index:57;pointer-events:none}

@@ -235,6 +235,11 @@ video[data-lb]{background:#ECECEC}
 /* case card hover: the cover zooms 3.5 % inside its frame (mouse / trackpad only, not with reduced motion) */
 .ph-clip{display:block;overflow:hidden}
 @media (min-width:768px){.stk-stage{gap:40px}}
+/* phones: the header slides away on a long scroll down (back on any scroll up); in cases its 2 px progress line stays */
+@media (max-width:767px){
+html .pg.hdr-hide .logo{transform:translateY(-56px)!important;pointer-events:none!important}
+html .pg.hdr-hide .logo:has(.rp){transform:translateY(-54px)!important}
+}
 /* In-app browsers (Telegram, Instagram…) draw their bars over the page and show what is beyond the screen edges there:
    page-coloured bands just outside the top and bottom edge fill that area (red while the loader plays). */
 .edge{position:fixed;left:0;right:0;height:320px;background:#F6F5F1;z-index:57;pointer-events:none}
