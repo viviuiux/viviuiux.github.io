@@ -17,7 +17,7 @@ const MANIFEST = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/manifest.json
 // Change this once the real domain is known (used for og:image / canonical, which must be absolute).
 const SITE_URL = (process.env.SITE_URL || 'https://viviuiux.github.io').replace(/\/$/, '');
 
-const DESC = 'Senior product designer with 5+ years of experience in mobile apps, growth and design systems.';
+const DESC = '5+ years designing mobile and web products end to end: growth, design systems and design engineering.';
 const RESUME = 'https://drive.google.com/file/d/1aOKujYnb-7EAlLjyKaRxROVOKjDd-9_z/view';
 
 const LINKS = {
