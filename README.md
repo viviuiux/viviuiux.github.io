@@ -2,6 +2,13 @@
 
 A static site (plain HTML/CSS/JS, no framework). The finished site is the **`public/`** folder.
 
+## Live site
+
+**https://viviuiux.github.io**. Repository: https://github.com/viviuiux/viviuiux.github.io
+
+Publishing is automatic: every push to `main` runs `.github/workflows/pages.yml`, which uploads the `public/` folder to GitHub Pages (about 1 minute).
+To publish a change: rebuild (`node tools/build.mjs`) → commit → push.
+
 ## Folders
 
 | Folder | What it is |
