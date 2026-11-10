@@ -327,8 +327,6 @@ html .pg.hdr-hide .logo:has(.rp){transform:translateY(-54px)!important}
 /* Loader: the page background (and the browser bar colour, via theme-color) is red while it plays,
    so Safari / in-app browsers don't show a light strip under it; switched back when it ends */
 html.ld-on:not(.ld-done),html.ld-on:not(.ld-done) body{background:#CF453A}
-/* Phones: the header plate also covers what is above it (in-app browsers show page content behind their top bar) */
-@media (max-width:767px){.pg .logo::before{content:'';position:absolute;left:0;right:0;bottom:100%;height:400px;background:#F6F5F1;pointer-events:none}}
 /* bottom bar (phones): the frosted glass sits on a layer clipped to the rounded shape, so no square corners show
    while the bar fades or during page transitions; while pages switch the glass is replaced by a solid tint */
 @media (max-width:767px){
