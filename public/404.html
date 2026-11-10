@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Page not found — Viktoriia Polotniuk</title>
-<meta name="description" content="5+ years designing mobile and web products end to end: growth, design systems and design engineering.">
+<meta name="description" content="4+ years designing mobile and web products end to end: growth, design systems and design engineering.">
 <meta name="theme-color" content="#F6F5F1">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Viktoriia Polotniuk">
 <meta property="og:title" content="Page not found — Viktoriia Polotniuk">
-<meta property="og:description" content="5+ years designing mobile and web products end to end: growth, design systems and design engineering.">
+<meta property="og:description" content="4+ years designing mobile and web products end to end: growth, design systems and design engineering.">
 <meta property="og:image" content="https://viviuiux.github.io/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Page not found — Viktoriia Polotniuk">
-<meta name="twitter:description" content="5+ years designing mobile and web products end to end: growth, design systems and design engineering.">
+<meta name="twitter:description" content="4+ years designing mobile and web products end to end: growth, design systems and design engineering.">
 <meta name="twitter:image" content="https://viviuiux.github.io/og-image.png">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
@@ -75,6 +75,15 @@ video[data-lb]{background:#ECECEC}
 /* case card hover: the cover zooms 3.5 % inside its frame (mouse / trackpad only, not with reduced motion) */
 .ph-clip{display:block;overflow:hidden}
 @media (min-width:768px){.stk-stage{gap:40px}}
+/* In-app browsers (Telegram, Instagram…) draw their bars over the page and show what is beyond the screen edges there:
+   page-coloured bands just outside the top and bottom edge fill that area (red while the loader plays). */
+.edge{position:fixed;left:0;right:0;height:320px;background:#F6F5F1;z-index:57;pointer-events:none}
+.edge-top{bottom:100%}
+.edge-bot{top:100%}
+html.ld-on .edge{background:#CF453A;animation:edge-bg .2s linear 2.75s forwards}
+@keyframes edge-bg{to{background:#F6F5F1}}
+html.ld-on .ld{top:-320px;bottom:-320px}
+@media (prefers-reduced-motion:reduce){html.ld-on .edge{background:#F6F5F1;animation:none}}
 /* bottom bar (phones): the frosted glass sits on a layer clipped to the rounded shape, so no square corners show
    while the bar fades or during page transitions; while pages switch the glass is replaced by a solid tint */
 @media (max-width:767px){
@@ -99,6 +108,8 @@ img.is-loading{background:#ECECEC linear-gradient(100deg,rgba(255,255,255,0) 30%
 </style>
 </head>
 <body>
+<div class="edge edge-top" style="background:#CF453A"></div><div class="edge edge-bot" style="background:#CF453A"></div>
+
 <div class="nf">
 <a class="nf-logo" href="/" aria-label="Viktoriia Polotniuk — home"><img src="/assets/logo.png" alt="Viktoriia Polotniuk" decoding="async"></a>
 <div class="nf-in">

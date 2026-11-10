@@ -4,20 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>About — Viktoriia Polotniuk</title>
-<meta name="description" content="5+ years designing mobile and web products end to end: growth, design systems and design engineering.">
+<meta name="description" content="4+ years designing mobile and web products end to end: growth, design systems and design engineering.">
 <link rel="canonical" href="https://viviuiux.github.io/about/">
 <meta name="theme-color" content="#F6F5F1">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Viktoriia Polotniuk">
 <meta property="og:title" content="About me">
-<meta property="og:description" content="5+ years designing mobile and web products end to end: growth, design systems and design engineering.">
+<meta property="og:description" content="4+ years designing mobile and web products end to end: growth, design systems and design engineering.">
 <meta property="og:url" content="https://viviuiux.github.io/about/">
 <meta property="og:image" content="https://viviuiux.github.io/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="About me">
-<meta name="twitter:description" content="5+ years designing mobile and web products end to end: growth, design systems and design engineering.">
+<meta name="twitter:description" content="4+ years designing mobile and web products end to end: growth, design systems and design engineering.">
 <meta name="twitter:image" content="https://viviuiux.github.io/og-image.png">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
@@ -235,6 +235,15 @@ video[data-lb]{background:#ECECEC}
 /* case card hover: the cover zooms 3.5 % inside its frame (mouse / trackpad only, not with reduced motion) */
 .ph-clip{display:block;overflow:hidden}
 @media (min-width:768px){.stk-stage{gap:40px}}
+/* In-app browsers (Telegram, Instagram…) draw their bars over the page and show what is beyond the screen edges there:
+   page-coloured bands just outside the top and bottom edge fill that area (red while the loader plays). */
+.edge{position:fixed;left:0;right:0;height:320px;background:#F6F5F1;z-index:57;pointer-events:none}
+.edge-top{bottom:100%}
+.edge-bot{top:100%}
+html.ld-on .edge{background:#CF453A;animation:edge-bg .2s linear 2.75s forwards}
+@keyframes edge-bg{to{background:#F6F5F1}}
+html.ld-on .ld{top:-320px;bottom:-320px}
+@media (prefers-reduced-motion:reduce){html.ld-on .edge{background:#F6F5F1;animation:none}}
 /* bottom bar (phones): the frosted glass sits on a layer clipped to the rounded shape, so no square corners show
    while the bar fades or during page transitions; while pages switch the glass is replaced by a solid tint */
 @media (max-width:767px){
@@ -259,6 +268,8 @@ img.is-loading{background:#ECECEC linear-gradient(100deg,rgba(255,255,255,0) 30%
 </style>
 </head>
 <body>
+<div class="edge edge-top"></div><div class="edge edge-bot"></div>
+
 <a class="skip" href="#main">Skip to content</a>
 <div id="top" class="pg" style="position: relative; font-family: 'DM Sans', system-ui, sans-serif; color: #1E1E1E; background: #F6F5F1; min-height: 100vh; display: flex; flex-direction: column">
 <div class="hdr"><a class="logo" href="/" aria-label="Viktoriia Polotniuk — home" style="display: block; width: 207px; height: 40px; margin: 8px auto 0"><img src="/assets/logo.png" alt="Viktoriia Polotniuk" width="207" height="40" style="display: block; width: 207px; height: 40px; object-fit: contain" decoding="async"></a>
@@ -284,9 +295,9 @@ img.is-loading{background:#ECECEC linear-gradient(100deg,rgba(255,255,255,0) 30%
 <div style="display: flex; align-items: center; gap: 2px; font-family: 'DeFonte', 'DM Sans', sans-serif; font-size: 16px; line-height: 1.5; color: #5F5D58"><svg aria-hidden="true" style="display: block; flex: 0 0 20px" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 2.00879C7.238 2.00879 5 4.23779 5 6.99879C5 11.7728 10 17.9988 10 17.9988C10 17.9988 15 11.7718 15 6.99879C15 4.23879 12.762 2.00879 10 2.00879ZM10 9.75979C9.28392 9.75979 8.59716 9.47533 8.09081 8.96898C7.58446 8.46263 7.3 7.77587 7.3 7.05979C7.3 6.3437 7.58446 5.65695 8.09081 5.1506C8.59716 4.64425 9.28392 4.35979 10 4.35979C10.7161 4.35979 11.4028 4.64425 11.9092 5.1506C12.4155 5.65695 12.7 6.3437 12.7 7.05979C12.7 7.77587 12.4155 8.46263 11.9092 8.96898C11.4028 9.47533 10.7161 9.75979 10 9.75979Z" fill="#5F5D58"/></svg><span>Kyiv, Ukraine</span></div>
 </div>
 <div style="display: flex; flex-direction: column; gap: 8px">
-<p style="margin: 0; color: #5F5D58">I’m a senior product designer with 5+ years of experience. I found design while looking for what I really wanted to do. A course at Mate Academy turned into a love for design and everything around it — and soon I was mentoring new students there myself.</p>
+<p style="margin: 0; color: #5F5D58">I’m a product designer with 4+ years of experience. I found design while looking for what I really wanted to do. A course at Mate Academy turned into a love for design and everything around it — and soon I was mentoring new students there myself.</p>
 <p style="margin: 0; color: #5F5D58">Since then I’ve gone from a design agency to being the only designer at Smartist, and then to leading the app redesign at Nebula. Along the way I learned to own a product end to end: start with a hypothesis, design to test it, and let the data decide what ships.</p>
-<p style="margin: 0; color: #5F5D58">Open to senior product design roles. Reach out if you wanna be friends or colleagues!</p>
+<p style="margin: 0; color: #5F5D58">Open to new opportunities. Reach out if you wanna be friends or colleagues!</p>
 </div>
 </div>
 </section>

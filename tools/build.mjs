@@ -17,7 +17,7 @@ const MANIFEST = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/manifest.json
 // Change this once the real domain is known (used for og:image / canonical, which must be absolute).
 const SITE_URL = (process.env.SITE_URL || 'https://viviuiux.github.io').replace(/\/$/, '');
 
-const DESC = '5+ years designing mobile and web products end to end: growth, design systems and design engineering.';
+const DESC = '4+ years designing mobile and web products end to end: growth, design systems and design engineering.';
 const RESUME = 'https://drive.google.com/file/d/1aOKujYnb-7EAlLjyKaRxROVOKjDd-9_z/view';
 
 const LINKS = {
@@ -217,6 +217,24 @@ function pageJS(src, kase) {
   // canvas boards that show a whole page are taller than 1400 px — not a thing on the real site
   js = js.replace(/innerHeight > 1400/g, 'false').replace(/innerHeight < 1400/g, 'true');
   if (kase) js = lightboxPatch(js);
+  // Hero flower: move it out of the column only once; after that only update its coordinates (from the H1).
+  // Moving the element again on every resize (phones resize while scrolling) made Safari / in-app browsers lose its drawing.
+  if (js.includes("place(); addEventListener('resize', place); setTimeout(place, 300); setTimeout(place, 1200);")) {
+    js = js.replace("    const place = () => {\n      fl.setAttribute('style', orig);", "    let d = null, bp = null;\n    const full = () => {\n      fl.setAttribute('style', orig);")
+      .replace("      fl.style.setProperty('z-index', '40', 'important');\n    };\n    place();",
+        `      fl.style.setProperty('z-index', '40', 'important');
+      const h = document.querySelector('.hero-h1').getBoundingClientRect(); d = { x: a.left - h.left, y: a.top - h.top };
+    };
+    const place = () => {
+      const h1 = document.querySelector('.hero-h1'), mob = innerWidth < 768;
+      if (!d || !h1 || mob !== bp) { bp = mob; full(); return; }
+      const h = h1.getBoundingClientRect(), r = root.getBoundingClientRect();
+      fl.style.setProperty('left', (h.left - r.left + d.x) + 'px', 'important');
+      fl.style.setProperty('top', (h.top - r.top + d.y) + 'px', 'important');
+    };
+    place();`);
+    if (!js.includes('const full = () =>') || !js.includes('d = { x:')) throw new Error('hero flower patch failed');
+  }
   // sidebar stops 80 px above the footer (was 12 px: with the centred sidebar it looked pressed against the footer)
   if (js.includes("aside.style.marginBottom = -Math.max(0, gap - 12) + 'px';")) js = js.replace("aside.style.marginBottom = -Math.max(0, gap - 12) + 'px';", "aside.style.marginBottom = -Math.max(0, gap - 80) + 'px';");
   else js += SIDE_STOP_JS;
@@ -295,6 +313,15 @@ video[data-lb]{background:#ECECEC}
 /* case card hover: the cover zooms 3.5 % inside its frame (mouse / trackpad only, not with reduced motion) */
 .ph-clip{display:block;overflow:hidden}
 @media (min-width:768px){.stk-stage{gap:40px}}
+/* In-app browsers (Telegram, Instagram…) draw their bars over the page and show what is beyond the screen edges there:
+   page-coloured bands just outside the top and bottom edge fill that area (red while the loader plays). */
+.edge{position:fixed;left:0;right:0;height:320px;background:#F6F5F1;z-index:57;pointer-events:none}
+.edge-top{bottom:100%}
+.edge-bot{top:100%}
+html.ld-on .edge{background:#CF453A;animation:edge-bg .2s linear 2.75s forwards}
+@keyframes edge-bg{to{background:#F6F5F1}}
+html.ld-on .ld{top:-320px;bottom:-320px}
+@media (prefers-reduced-motion:reduce){html.ld-on .edge{background:#F6F5F1;animation:none}}
 /* bottom bar (phones): the frosted glass sits on a layer clipped to the rounded shape, so no square corners show
    while the bar fades or during page transitions; while pages switch the glass is replaced by a solid tint */
 @media (max-width:767px){
@@ -397,6 +424,9 @@ function build(page) {
 
   // footer in a page-coloured wrapper (for the glass effect)
   body = body.replace(/<footer class="foot"/, '<div class="foot-wrap"><footer class="foot"').replace('</footer>', '</footer></div>');
+
+  // bands beyond the screen edges for in-app browsers (red on the red 404 page)
+  body = (page.notFound ? '<div class="edge edge-top" style="background:#CF453A"></div><div class="edge edge-bot" style="background:#CF453A"></div>\n' : '<div class="edge edge-top"></div><div class="edge edge-bot"></div>\n') + body;
 
   // skip link + landmarks
   if (!page.notFound) body = body.replace(/(<div id="top" class="pg")/, '<a class="skip" href="#main">Skip to content</a>\n$1').replace(/<main style=/, '<main id="main" style=');
