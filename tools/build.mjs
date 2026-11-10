@@ -238,7 +238,6 @@ function head(page, helmet) {
 <meta name="description" content="${esc(DESC)}">
 ${abs ? `<link rel="canonical" href="${abs}">\n` : ''}<meta name="theme-color" content="#F6F5F1">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Viktoriia Polotniuk">
 <meta property="og:title" content="${esc(page.title)}">
 <meta property="og:description" content="${esc(DESC)}">
 ${abs ? `<meta property="og:url" content="${abs}">\n` : ''}<meta property="og:image" content="${SITE_URL}/og-image.png">
