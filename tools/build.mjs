@@ -31,12 +31,12 @@ const LINKS = {
 };
 
 const PAGES = [
-  { src: 'Main.dc.html', out: 'index.html', url: '/', title: 'Viktoriia Polotniuk — Senior Product Designer', work: true },
-  { src: 'About.dc.html', out: 'about/index.html', url: '/about/', title: 'About — Viktoriia Polotniuk' },
-  { src: 'Case.dc.html', out: 'work/app-rebrand-design-system/index.html', url: '/work/app-rebrand-design-system/', title: 'App rebrand & design system — Viktoriia Polotniuk', kase: true },
-  { src: 'Case2.dc.html', out: 'work/discover-tab/index.html', url: '/work/discover-tab/', title: 'Discover tab from scratch — Viktoriia Polotniuk', kase: true },
-  { src: 'Case3.dc.html', out: 'work/smart-interior-search/index.html', url: '/work/smart-interior-search/', title: 'Smart interior search — Viktoriia Polotniuk', kase: true },
-  { src: 'Case4.dc.html', out: 'work/ai-background-removal/index.html', url: '/work/ai-background-removal/', title: 'AI background removal for artworks — Viktoriia Polotniuk', kase: true },
+  { src: 'Main.dc.html', out: 'index.html', url: '/', title: 'Viktoriia Polotniuk — Senior Product Designer', og: 'Senior Product Designer', work: true },
+  { src: 'About.dc.html', out: 'about/index.html', url: '/about/', title: 'About — Viktoriia Polotniuk', og: 'About me' },
+  { src: 'Case.dc.html', out: 'work/app-rebrand-design-system/index.html', url: '/work/app-rebrand-design-system/', title: 'App rebrand & design system — Viktoriia Polotniuk', og: 'App rebrand & design system', kase: true },
+  { src: 'Case2.dc.html', out: 'work/discover-tab/index.html', url: '/work/discover-tab/', title: 'Discover tab from scratch — Viktoriia Polotniuk', og: 'Discover tab from scratch', kase: true },
+  { src: 'Case3.dc.html', out: 'work/smart-interior-search/index.html', url: '/work/smart-interior-search/', title: 'Smart interior search — Viktoriia Polotniuk', og: 'Smart interior search', kase: true },
+  { src: 'Case4.dc.html', out: 'work/ai-background-removal/index.html', url: '/work/ai-background-removal/', title: 'AI background removal for artworks — Viktoriia Polotniuk', og: 'AI background removal for artworks', kase: true },
   { src: '404.dc.html', out: '404.html', url: null, title: 'Page not found — Viktoriia Polotniuk', notFound: true },
 ];
 
@@ -238,13 +238,14 @@ function head(page, helmet) {
 <meta name="description" content="${esc(DESC)}">
 ${abs ? `<link rel="canonical" href="${abs}">\n` : ''}<meta name="theme-color" content="#F6F5F1">
 <meta property="og:type" content="website">
-<meta property="og:title" content="${esc(page.title)}">
+<meta property="og:site_name" content="Viktoriia Polotniuk">
+<meta property="og:title" content="${esc(page.og || page.title)}">
 <meta property="og:description" content="${esc(DESC)}">
 ${abs ? `<meta property="og:url" content="${abs}">\n` : ''}<meta property="og:image" content="${SITE_URL}/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="${esc(page.title)}">
+<meta name="twitter:title" content="${esc(page.og || page.title)}">
 <meta name="twitter:description" content="${esc(DESC)}">
 <meta name="twitter:image" content="${SITE_URL}/og-image.png">
 <link rel="icon" href="/favicon.ico" sizes="any">
