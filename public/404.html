@@ -52,7 +52,6 @@ html,body{margin:0;height:100%;background:#CF453A}
 /* Page transitions (variant B, made calmer): pages cross-fade with no blank gap; only the cover you clicked
    morphs (its name is set in JS just for that navigation); the logo and the sidebar keep their place. */
 .side{view-transition-name:none}
-html.vt-side .side{view-transition-name:site-side}
 .pg .logo{view-transition-name:none}
 .pg .logo img{view-transition-name:site-logo}
 ::view-transition-old(root){animation:vt-out .24s cubic-bezier(.4,0,1,1) both}
@@ -64,13 +63,28 @@ html.vt-side .side{view-transition-name:site-side}
 ::view-transition-old(vt-cover){animation-name:vt-cover-out}
 @keyframes vt-cover-out{to{opacity:0}}
 ::view-transition-new(vt-cover){animation:none}
-::view-transition-old(site-logo),::view-transition-new(site-logo),::view-transition-old(site-bnav),::view-transition-new(site-bnav){animation:none}
+::view-transition-old(site-logo),::view-transition-new(site-logo){animation:none}
+::view-transition-group(site-bnav){animation-duration:.25s}
+::view-transition-old(site-bnav),::view-transition-new(site-bnav){animation-duration:.25s}
 .nav a[aria-current] .ul{display:none}
 .lb [hidden]{display:none!important}
 video[data-lb]{background:#ECECEC}
 /* the footer sits in a page-coloured box so the glass band also bends the edges of the red block */
 .foot-wrap{display:flow-root;background:#F6F5F1}
 .lb{transition:opacity .18s ease!important}
+/* case card hover: the cover zooms 3.5 % inside its frame (mouse / trackpad only, not with reduced motion) */
+.ph-clip{display:block;overflow:hidden}
+@media (min-width:768px){.stk-stage{gap:40px}}
+/* bottom bar (phones): the frosted glass sits on a layer clipped to the rounded shape, so no square corners show
+   while the bar fades or during page transitions; while pages switch the glass is replaced by a solid tint */
+@media (max-width:767px){
+.bnav{-webkit-backdrop-filter:none;backdrop-filter:none}
+.bnav::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);clip-path:inset(0 round 22px);pointer-events:none}
+html.vt-run .bnav::before{-webkit-backdrop-filter:none;backdrop-filter:none}
+html.vt-run .bnav{background:rgba(246,245,241,.96)}
+}
+.card-link .ph{transition:transform .5s cubic-bezier(.2,.7,.2,1),background-color .3s ease}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){.card-link:hover .ph{transform:scale(1.035)}}
 /* header plate fades in / out softly instead of switching on at once */
 .pg .logo{transition:transform .35s ease,opacity .35s ease,background-color .3s ease}
 /* Email: dim only the link text on hover / focus, so the tooltip (part of the link) keeps one colour */

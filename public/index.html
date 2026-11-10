@@ -223,7 +223,6 @@ html.ld-on .hf-draw{stroke-dasharray:5545;stroke-dashoffset:5545;animation:ldDra
 /* Page transitions (variant B, made calmer): pages cross-fade with no blank gap; only the cover you clicked
    morphs (its name is set in JS just for that navigation); the logo and the sidebar keep their place. */
 .side{view-transition-name:none}
-html.vt-side .side{view-transition-name:site-side}
 .pg .logo{view-transition-name:none}
 .pg .logo img{view-transition-name:site-logo}
 ::view-transition-old(root){animation:vt-out .24s cubic-bezier(.4,0,1,1) both}
@@ -235,13 +234,28 @@ html.vt-side .side{view-transition-name:site-side}
 ::view-transition-old(vt-cover){animation-name:vt-cover-out}
 @keyframes vt-cover-out{to{opacity:0}}
 ::view-transition-new(vt-cover){animation:none}
-::view-transition-old(site-logo),::view-transition-new(site-logo),::view-transition-old(site-bnav),::view-transition-new(site-bnav){animation:none}
+::view-transition-old(site-logo),::view-transition-new(site-logo){animation:none}
+::view-transition-group(site-bnav){animation-duration:.25s}
+::view-transition-old(site-bnav),::view-transition-new(site-bnav){animation-duration:.25s}
 .nav a[aria-current] .ul{display:none}
 .lb [hidden]{display:none!important}
 video[data-lb]{background:#ECECEC}
 /* the footer sits in a page-coloured box so the glass band also bends the edges of the red block */
 .foot-wrap{display:flow-root;background:#F6F5F1}
 .lb{transition:opacity .18s ease!important}
+/* case card hover: the cover zooms 3.5 % inside its frame (mouse / trackpad only, not with reduced motion) */
+.ph-clip{display:block;overflow:hidden}
+@media (min-width:768px){.stk-stage{gap:40px}}
+/* bottom bar (phones): the frosted glass sits on a layer clipped to the rounded shape, so no square corners show
+   while the bar fades or during page transitions; while pages switch the glass is replaced by a solid tint */
+@media (max-width:767px){
+.bnav{-webkit-backdrop-filter:none;backdrop-filter:none}
+.bnav::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);clip-path:inset(0 round 22px);pointer-events:none}
+html.vt-run .bnav::before{-webkit-backdrop-filter:none;backdrop-filter:none}
+html.vt-run .bnav{background:rgba(246,245,241,.96)}
+}
+.card-link .ph{transition:transform .5s cubic-bezier(.2,.7,.2,1),background-color .3s ease}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){.card-link:hover .ph{transform:scale(1.035)}}
 /* header plate fades in / out softly instead of switching on at once */
 .pg .logo{transition:transform .35s ease,opacity .35s ease,background-color .3s ease}
 /* Email: dim only the link text on hover / focus, so the tooltip (part of the link) keeps one colour */
@@ -279,7 +293,7 @@ img.is-loading{background:#ECECEC linear-gradient(100deg,rgba(255,255,255,0) 30%
 <h2 class="sec-h" style="margin: 0 0 -40px; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 24px; line-height: 1; color: #1E1E1E">Selected work</h2>
 <section aria-label="Cases" class="stk">
 <div class="stk-stage">
-<div class="stk-card"><a class="card-link" href="/work/app-rebrand-design-system/"><img class="is-loading ph" src="/assets/cover-1-app-rebrand-and-design-system.webp" alt="App rebrand &amp; design system" style="display: block; width: 100%; height: 320px; object-fit: cover" loading="lazy" decoding="async" srcset="/assets/cover-1-app-rebrand-and-design-system-640.webp 640w, /assets/cover-1-app-rebrand-and-design-system-960.webp 960w, /assets/cover-1-app-rebrand-and-design-system.webp 1200w" sizes="(max-width: 767px) calc(100vw - 40px), 756px" fetchpriority="high"><div class="cmeta" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 16px; font-weight: 500; line-height: normal"><span class="cm-name" style="color: #1E1E1E">App rebrand &amp; design system</span><span aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span style="color: #6D6D6D">Nebula</span><span class="cm-d2" aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span class="cm-yr" style="color: #6D6D6D"><span class="cm-sh">Shipped </span>2026</span></div></a></div><div class="stk-card"><a class="card-link" href="/work/discover-tab/"><img class="is-loading ph" src="/assets/cover-2-discover-tab-from-scratch.webp" alt="Discover tab from scratch" style="display: block; width: 100%; height: 320px; object-fit: cover" loading="lazy" decoding="async" srcset="/assets/cover-2-discover-tab-from-scratch-640.webp 640w, /assets/cover-2-discover-tab-from-scratch-960.webp 960w, /assets/cover-2-discover-tab-from-scratch.webp 1200w" sizes="(max-width: 767px) calc(100vw - 40px), 756px"><div class="cmeta" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 16px; font-weight: 500; line-height: normal"><span class="cm-name" style="color: #1E1E1E">Discover tab from scratch</span><span aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span style="color: #6D6D6D">Nebula</span><span class="cm-d2" aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span class="cm-yr" style="color: #6D6D6D"><span class="cm-sh">Shipped </span>2026</span></div></a></div><div class="stk-card"><a class="card-link" href="/work/smart-interior-search/"><img class="is-loading ph" src="/assets/cover-3-smart-interior-search-filters.webp" alt="Smart interior search filters" style="display: block; width: 100%; height: 320px; object-fit: cover" loading="lazy" decoding="async" srcset="/assets/cover-3-smart-interior-search-filters-640.webp 640w, /assets/cover-3-smart-interior-search-filters-960.webp 960w, /assets/cover-3-smart-interior-search-filters.webp 1200w" sizes="(max-width: 767px) calc(100vw - 40px), 756px"><div class="cmeta" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 16px; font-weight: 500; line-height: normal"><span class="cm-name" style="color: #1E1E1E">Smart interior search</span><span aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span style="color: #6D6D6D">Smartist</span><span class="cm-d2" aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span class="cm-yr" style="color: #6D6D6D"><span class="cm-sh">Shipped </span>2025</span></div></a></div><div class="stk-card"><a class="card-link" href="/work/ai-background-removal/"><img class="is-loading ph" src="/assets/cover-4-an-artwork-placed-on-a-wall-in-the-app.webp" alt="An artwork placed on a wall in the app" style="display: block; width: 100%; height: 320px; object-fit: cover" loading="lazy" decoding="async" srcset="/assets/cover-4-an-artwork-placed-on-a-wall-in-the-app-640.webp 640w, /assets/cover-4-an-artwork-placed-on-a-wall-in-the-app-960.webp 960w, /assets/cover-4-an-artwork-placed-on-a-wall-in-the-app.webp 1200w" sizes="(max-width: 767px) calc(100vw - 40px), 756px"><div class="cmeta" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 16px; font-weight: 500; line-height: normal"><span class="cm-name" style="color: #1E1E1E">AI background removal for artworks</span><span aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span style="color: #6D6D6D">Smartist</span><span class="cm-d2" aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span class="cm-yr" style="color: #6D6D6D"><span class="cm-sh">Shipped </span>2024</span></div></a></div>
+<div class="stk-card"><a class="card-link" href="/work/app-rebrand-design-system/"><span class="ph-clip"><img class="is-loading ph" src="/assets/cover-1-app-rebrand-and-design-system.webp" alt="App rebrand &amp; design system" style="display: block; width: 100%; height: 320px; object-fit: cover" loading="lazy" decoding="async" srcset="/assets/cover-1-app-rebrand-and-design-system-640.webp 640w, /assets/cover-1-app-rebrand-and-design-system-960.webp 960w, /assets/cover-1-app-rebrand-and-design-system.webp 1200w" sizes="(max-width: 767px) calc(100vw - 40px), 756px" fetchpriority="high"></span><div class="cmeta" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 16px; font-weight: 500; line-height: normal"><span class="cm-name" style="color: #1E1E1E">App rebrand &amp; design system</span><span aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span style="color: #6D6D6D">Nebula</span><span class="cm-d2" aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span class="cm-yr" style="color: #6D6D6D"><span class="cm-sh">Shipped </span>2026</span></div></a></div><div class="stk-card"><a class="card-link" href="/work/discover-tab/"><span class="ph-clip"><img class="is-loading ph" src="/assets/cover-2-discover-tab-from-scratch.webp" alt="Discover tab from scratch" style="display: block; width: 100%; height: 320px; object-fit: cover" loading="lazy" decoding="async" srcset="/assets/cover-2-discover-tab-from-scratch-640.webp 640w, /assets/cover-2-discover-tab-from-scratch-960.webp 960w, /assets/cover-2-discover-tab-from-scratch.webp 1200w" sizes="(max-width: 767px) calc(100vw - 40px), 756px"></span><div class="cmeta" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 16px; font-weight: 500; line-height: normal"><span class="cm-name" style="color: #1E1E1E">Discover tab from scratch</span><span aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span style="color: #6D6D6D">Nebula</span><span class="cm-d2" aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span class="cm-yr" style="color: #6D6D6D"><span class="cm-sh">Shipped </span>2026</span></div></a></div><div class="stk-card"><a class="card-link" href="/work/smart-interior-search/"><span class="ph-clip"><img class="is-loading ph" src="/assets/cover-3-smart-interior-search-filters.webp" alt="Smart interior search filters" style="display: block; width: 100%; height: 320px; object-fit: cover" loading="lazy" decoding="async" srcset="/assets/cover-3-smart-interior-search-filters-640.webp 640w, /assets/cover-3-smart-interior-search-filters-960.webp 960w, /assets/cover-3-smart-interior-search-filters.webp 1200w" sizes="(max-width: 767px) calc(100vw - 40px), 756px"></span><div class="cmeta" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 16px; font-weight: 500; line-height: normal"><span class="cm-name" style="color: #1E1E1E">Smart interior search</span><span aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span style="color: #6D6D6D">Smartist</span><span class="cm-d2" aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span class="cm-yr" style="color: #6D6D6D"><span class="cm-sh">Shipped </span>2025</span></div></a></div><div class="stk-card"><a class="card-link" href="/work/ai-background-removal/"><span class="ph-clip"><img class="is-loading ph" src="/assets/cover-4-an-artwork-placed-on-a-wall-in-the-app.webp" alt="An artwork placed on a wall in the app" style="display: block; width: 100%; height: 320px; object-fit: cover" loading="lazy" decoding="async" srcset="/assets/cover-4-an-artwork-placed-on-a-wall-in-the-app-640.webp 640w, /assets/cover-4-an-artwork-placed-on-a-wall-in-the-app-960.webp 960w, /assets/cover-4-an-artwork-placed-on-a-wall-in-the-app.webp 1200w" sizes="(max-width: 767px) calc(100vw - 40px), 756px"></span><div class="cmeta" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 16px; font-weight: 500; line-height: normal"><span class="cm-name" style="color: #1E1E1E">AI background removal for artworks</span><span aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span style="color: #6D6D6D">Smartist</span><span class="cm-d2" aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span class="cm-yr" style="color: #6D6D6D"><span class="cm-sh">Shipped </span>2024</span></div></a></div>
 </div>
 </section>
 </div>
@@ -474,6 +488,7 @@ document.addEventListener('mouseleave', () => { x = y = -100; hover = ''; kick()
   const named = [];
   const name = (el, n) => { if (el) { el.style.viewTransitionName = n; named.push(el); } };
   const setup = (from, to) => {
+    document.documentElement.classList.add('vt-run');
     const key = site(from) && site(to) && (isCase(to) || isCase(from)) ? (isCase(to) ? to : from) : null;
     const cov = key && coverFor(key);
     if (cov && inView(cov)) name(cov, 'vt-cover');
@@ -482,7 +497,7 @@ document.addEventListener('mouseleave', () => { x = y = -100; hover = ''; kick()
     if (root && root.classList.contains('hdr-hide')) { name(document.querySelector('.pg .logo'), 'none'); name(document.querySelector('.bnav'), 'none'); }
     if (root && root.classList.contains('at-end')) name(document.querySelector('.bnav'), 'none');
   };
-  const clear = () => { named.splice(0).forEach((el) => (el.style.viewTransitionName = '')); document.documentElement.classList.remove('vt-side'); };
+  const clear = () => { named.splice(0).forEach((el) => (el.style.viewTransitionName = '')); document.documentElement.classList.remove('vt-side', 'vt-run'); };
   addEventListener('pageswap', (e) => { if (e.viewTransition && e.activation && e.activation.entry) setup(norm(location.href), norm(e.activation.entry.url)); });
   addEventListener('pagereveal', (e) => {
     const from = window.navigation && navigation.activation && navigation.activation.from;
@@ -492,6 +507,15 @@ document.addEventListener('mouseleave', () => { x = y = -100; hover = ''; kick()
   });
   // a page restored by Back/Forward must not replay (or keep) the loader
   addEventListener('pageshow', (e) => { if (e.persisted) { clear(); document.documentElement.classList.remove('ld-on'); } });
+}
+// Hero flower: after it has been drawn, keep it drawn. On phones the address bar changes the window height while scrolling,
+// the flower is re-placed on resize, and moving an element restarts its CSS animation (it vanished and drew again).
+{
+  const p = document.querySelector('.hf-draw');
+  if (p) {
+    const done = () => { p.style.animation = 'none'; p.style.strokeDashoffset = '0'; };
+    if (!document.documentElement.classList.contains('ld-on')) done(); else p.addEventListener('animationend', done, { once: true });
+  }
 }
 // Sidebar (site nav / case TOC): sticks in the vertical middle of the screen, never under the header.
 {

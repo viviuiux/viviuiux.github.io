@@ -119,6 +119,7 @@ const VT_JS = `// Page transitions: name only the one cover that links the two p
   const named = [];
   const name = (el, n) => { if (el) { el.style.viewTransitionName = n; named.push(el); } };
   const setup = (from, to) => {
+    document.documentElement.classList.add('vt-run');
     const key = site(from) && site(to) && (isCase(to) || isCase(from)) ? (isCase(to) ? to : from) : null;
     const cov = key && coverFor(key);
     if (cov && inView(cov)) name(cov, 'vt-cover');
@@ -127,7 +128,7 @@ const VT_JS = `// Page transitions: name only the one cover that links the two p
     if (root && root.classList.contains('hdr-hide')) { name(document.querySelector('.pg .logo'), 'none'); name(document.querySelector('.bnav'), 'none'); }
     if (root && root.classList.contains('at-end')) name(document.querySelector('.bnav'), 'none');
   };
-  const clear = () => { named.splice(0).forEach((el) => (el.style.viewTransitionName = '')); document.documentElement.classList.remove('vt-side'); };
+  const clear = () => { named.splice(0).forEach((el) => (el.style.viewTransitionName = '')); document.documentElement.classList.remove('vt-side', 'vt-run'); };
   addEventListener('pageswap', (e) => { if (e.viewTransition && e.activation && e.activation.entry) setup(norm(location.href), norm(e.activation.entry.url)); });
   addEventListener('pagereveal', (e) => {
     const from = window.navigation && navigation.activation && navigation.activation.from;
@@ -140,7 +141,7 @@ const VT_JS = `// Page transitions: name only the one cover that links the two p
 }
 `;
 
-const LOADED_JS = `// Sidebar (site nav / case TOC): sticks in the vertical middle of the screen, never under the header.
+const LOADED_JS = `// Hero flower: after it has been drawn, keep it drawn. On phones the address bar changes the window height while scrolling,\n// the flower is re-placed on resize, and moving an element restarts its CSS animation (it vanished and drew again).\n{\n  const p = document.querySelector('.hf-draw');\n  if (p) {\n    const done = () => { p.style.animation = 'none'; p.style.strokeDashoffset = '0'; };\n    if (!document.documentElement.classList.contains('ld-on')) done(); else p.addEventListener('animationend', done, { once: true });\n  }\n}\n// Sidebar (site nav / case TOC): sticks in the vertical middle of the screen, never under the header.
 {
   const nav = document.querySelector('aside.side > nav');
   if (nav) {
@@ -271,7 +272,6 @@ const SITE_CSS = `
 /* Page transitions (variant B, made calmer): pages cross-fade with no blank gap; only the cover you clicked
    morphs (its name is set in JS just for that navigation); the logo and the sidebar keep their place. */
 .side{view-transition-name:none}
-html.vt-side .side{view-transition-name:site-side}
 .pg .logo{view-transition-name:none}
 .pg .logo img{view-transition-name:site-logo}
 ::view-transition-old(root){animation:vt-out .24s cubic-bezier(.4,0,1,1) both}
@@ -283,13 +283,28 @@ html.vt-side .side{view-transition-name:site-side}
 ::view-transition-old(vt-cover){animation-name:vt-cover-out}
 @keyframes vt-cover-out{to{opacity:0}}
 ::view-transition-new(vt-cover){animation:none}
-::view-transition-old(site-logo),::view-transition-new(site-logo),::view-transition-old(site-bnav),::view-transition-new(site-bnav){animation:none}
+::view-transition-old(site-logo),::view-transition-new(site-logo){animation:none}
+::view-transition-group(site-bnav){animation-duration:.25s}
+::view-transition-old(site-bnav),::view-transition-new(site-bnav){animation-duration:.25s}
 .nav a[aria-current] .ul{display:none}
 .lb [hidden]{display:none!important}
 video[data-lb]{background:#ECECEC}
 /* the footer sits in a page-coloured box so the glass band also bends the edges of the red block */
 .foot-wrap{display:flow-root;background:#F6F5F1}
 .lb{transition:opacity .18s ease!important}
+/* case card hover: the cover zooms 3.5 % inside its frame (mouse / trackpad only, not with reduced motion) */
+.ph-clip{display:block;overflow:hidden}
+@media (min-width:768px){.stk-stage{gap:40px}}
+/* bottom bar (phones): the frosted glass sits on a layer clipped to the rounded shape, so no square corners show
+   while the bar fades or during page transitions; while pages switch the glass is replaced by a solid tint */
+@media (max-width:767px){
+.bnav{-webkit-backdrop-filter:none;backdrop-filter:none}
+.bnav::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);clip-path:inset(0 round 22px);pointer-events:none}
+html.vt-run .bnav::before{-webkit-backdrop-filter:none;backdrop-filter:none}
+html.vt-run .bnav{background:rgba(246,245,241,.96)}
+}
+.card-link .ph{transition:transform .5s cubic-bezier(.2,.7,.2,1),background-color .3s ease}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){.card-link:hover .ph{transform:scale(1.035)}}
 /* header plate fades in / out softly instead of switching on at once */
 .pg .logo{transition:transform .35s ease,opacity .35s ease,background-color .3s ease}
 /* Email: dim only the link text on hover / focus, so the tooltip (part of the link) keeps one colour */
@@ -377,6 +392,9 @@ function build(page) {
     return '<img' + out + '>';
   });
 
+  // case cards: the cover sits in a clipping frame so it can zoom in a little on hover
+  body = body.replace(/(<a class="card-link"[^>]*>)(<img [^>]*>)/g, '$1<span class="ph-clip">$2</span>');
+
   // footer in a page-coloured wrapper (for the glass effect)
   body = body.replace(/<footer class="foot"/, '<div class="foot-wrap"><footer class="foot"').replace('</footer>', '</footer></div>');
 
@@ -423,6 +441,12 @@ function buildGlass() {
   for (const [o, n] of [['scale="34"', 'scale="' + SPLIT[0] + '"'], ['scale="37"', 'scale="' + SPLIT[1] + '"'], ['scale="40"', 'scale="' + SPLIT[2] + '"']]) {
     if (!block.includes(o)) throw new Error('glass: not found ' + o); block = block.replace(o, n);
   }
+  // no colour line at the bottom edge of a block: refract a copy that has the page colour underneath, with room below the block
+  for (const [o, n] of [
+    ['<feFlood flood-color="rgb(128,128,128)" result="neutral"/>', '<feFlood flood-color="rgb(128,128,128)" result="neutral"/>\n    <feFlood flood-color="#F6F5F1" result="pagebg"/>\n    <feMerge result="src"><feMergeNode in="pagebg"/><feMergeNode in="SourceGraphic"/></feMerge>'],
+    ["F.setAttribute('height', Math.ceil(Math.max(r.height, t.scrollHeight)));", "F.setAttribute('height', Math.ceil(Math.max(r.height, t.scrollHeight)) + 60);"],
+  ]) { if (!block.includes(o)) throw new Error('glass: not found ' + o); block = block.replace(o, n); }
+  block = block.split('<feDisplacementMap in="SourceGraphic"').join('<feDisplacementMap in="src"');
   // the effect fades out over the last 160 px of the page, so at the very bottom the footer shows its real, straight shape
   const P = "const place = () => {\n    if (mode() === 'off') return;";
   if (!block.includes(P)) throw new Error('glass: place() not found');

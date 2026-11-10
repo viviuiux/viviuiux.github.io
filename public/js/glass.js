@@ -11,11 +11,13 @@
   svg.setAttribute('width', '0'); svg.setAttribute('height', '0'); svg.style.position = 'absolute';
   svg.innerHTML = targets.map((_, i) => `<filter id="lgF${i}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
     <feFlood flood-color="rgb(128,128,128)" result="neutral"/>
+    <feFlood flood-color="#F6F5F1" result="pagebg"/>
+    <feMerge result="src"><feMergeNode in="pagebg"/><feMergeNode in="SourceGraphic"/></feMerge>
     <feImage class="lgMap" preserveAspectRatio="none" result="lens"/>
     <feComposite in="lens" in2="neutral" operator="over" result="map"/>
-    <feDisplacementMap in="SourceGraphic" in2="map" scale="24" xChannelSelector="R" yChannelSelector="G" result="dR"/>
-    <feDisplacementMap in="SourceGraphic" in2="map" scale="38" xChannelSelector="R" yChannelSelector="G" result="dG"/>
-    <feDisplacementMap in="SourceGraphic" in2="map" scale="54" xChannelSelector="R" yChannelSelector="G" result="dB"/>
+    <feDisplacementMap in="src" in2="map" scale="24" xChannelSelector="R" yChannelSelector="G" result="dR"/>
+    <feDisplacementMap in="src" in2="map" scale="38" xChannelSelector="R" yChannelSelector="G" result="dG"/>
+    <feDisplacementMap in="src" in2="map" scale="54" xChannelSelector="R" yChannelSelector="G" result="dB"/>
     <feColorMatrix in="dR" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r"/>
     <feColorMatrix in="dG" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g"/>
     <feColorMatrix in="dB" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b"/>
@@ -68,7 +70,7 @@
     const off = mode() === 'pill' ? (innerWidth < 768 ? 16 : 20) : 0;
     targets.forEach((t, i) => {
       const r = t.getBoundingClientRect(), F = filters[i], fe = F.querySelector('.lgMap');
-      F.setAttribute('x', 0); F.setAttribute('y', 0); F.setAttribute('width', Math.ceil(r.width)); F.setAttribute('height', Math.ceil(Math.max(r.height, t.scrollHeight)));
+      F.setAttribute('x', 0); F.setAttribute('y', 0); F.setAttribute('width', Math.ceil(r.width)); F.setAttribute('height', Math.ceil(Math.max(r.height, t.scrollHeight)) + 60);
       fe.setAttribute('x', fe.dataset.x || 0);
       fe.setAttribute('y', Math.round(innerHeight - mapH - off - r.top));
     });
