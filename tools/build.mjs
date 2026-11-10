@@ -282,7 +282,7 @@ ${css.trim()}`;
 
 // Loader: plays when you open the site fresh (typed URL, bookmark, link from LinkedIn…) and on reload;
 // not when you come to Work from another page of the site or with Back/Forward. Skipped under reduced motion.
-const LOADER_GATE = "<script>try{(function(){var n=performance.getEntriesByType('navigation')[0],t=n?n.type:'navigate',r=document.referrer,inside=false;try{inside=!!r&&new URL(r).origin===location.origin}catch(e){}if((t==='reload'||(t==='navigate'&&!inside))&&!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('ld-on')})()}catch(e){}</script>";
+const LOADER_GATE = "<script>try{(function(){var n=performance.getEntriesByType('navigation')[0],t=n?n.type:'navigate',r=document.referrer,inside=false;try{inside=!!r&&new URL(r).origin===location.origin}catch(e){}if((t==='reload'||(t==='navigate'&&!inside))&&!matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.add('ld-on');var m=document.querySelector('meta[name=theme-color]');if(m)m.content='#CF453A';setTimeout(function(){document.documentElement.classList.add('ld-done');if(m)m.content='#F6F5F1'},2750)}})()}catch(e){}</script>";
 
 // Additions on top of the prototype CSS (real-site only).
 const SITE_CSS = `
@@ -321,15 +321,11 @@ video[data-lb]{background:#ECECEC}
 html .pg.hdr-hide .logo{transform:translateY(-56px)!important;pointer-events:none!important}
 html .pg.hdr-hide .logo:has(.rp){transform:translateY(-54px)!important}
 }
-/* In-app browsers (Telegram, Instagram…) draw their bars over the page and show what is beyond the screen edges there:
-   page-coloured bands just outside the top and bottom edge fill that area (red while the loader plays). */
-.edge{position:fixed;left:0;right:0;height:320px;background:#F6F5F1;z-index:57;pointer-events:none}
-.edge-top{bottom:100%}
-.edge-bot{top:100%}
-html.ld-on .edge{background:#CF453A;animation:edge-bg .2s linear 2.75s forwards}
-@keyframes edge-bg{to{background:#F6F5F1}}
-html.ld-on .ld{top:-320px;bottom:-320px}
-@media (prefers-reduced-motion:reduce){html.ld-on .edge{background:#F6F5F1;animation:none}}
+/* Loader: the page background (and the browser bar colour, via theme-color) is red while it plays,
+   so Safari / in-app browsers don't show a light strip under it; switched back when it ends */
+html.ld-on:not(.ld-done),html.ld-on:not(.ld-done) body{background:#CF453A}
+/* Phones: the header plate also covers what is above it (in-app browsers show page content behind their top bar) */
+@media (max-width:767px){.pg .logo::before{content:'';position:absolute;left:0;right:0;bottom:100%;height:400px;background:#F6F5F1;pointer-events:none}}
 /* bottom bar (phones): the frosted glass sits on a layer clipped to the rounded shape, so no square corners show
    while the bar fades or during page transitions; while pages switch the glass is replaced by a solid tint */
 @media (max-width:767px){
@@ -432,9 +428,6 @@ function build(page) {
 
   // footer in a page-coloured wrapper (for the glass effect)
   body = body.replace(/<footer class="foot"/, '<div class="foot-wrap"><footer class="foot"').replace('</footer>', '</footer></div>');
-
-  // bands beyond the screen edges for in-app browsers (red on the red 404 page)
-  body = (page.notFound ? '<div class="edge edge-top" style="background:#CF453A"></div><div class="edge edge-bot" style="background:#CF453A"></div>\n' : '<div class="edge edge-top"></div><div class="edge edge-bot"></div>\n') + body;
 
   // skip link + landmarks
   if (!page.notFound) body = body.replace(/(<div id="top" class="pg")/, '<a class="skip" href="#main">Skip to content</a>\n$1').replace(/<main style=/, '<main id="main" style=');

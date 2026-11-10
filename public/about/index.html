@@ -240,15 +240,11 @@ video[data-lb]{background:#ECECEC}
 html .pg.hdr-hide .logo{transform:translateY(-56px)!important;pointer-events:none!important}
 html .pg.hdr-hide .logo:has(.rp){transform:translateY(-54px)!important}
 }
-/* In-app browsers (Telegram, Instagram…) draw their bars over the page and show what is beyond the screen edges there:
-   page-coloured bands just outside the top and bottom edge fill that area (red while the loader plays). */
-.edge{position:fixed;left:0;right:0;height:320px;background:#F6F5F1;z-index:57;pointer-events:none}
-.edge-top{bottom:100%}
-.edge-bot{top:100%}
-html.ld-on .edge{background:#CF453A;animation:edge-bg .2s linear 2.75s forwards}
-@keyframes edge-bg{to{background:#F6F5F1}}
-html.ld-on .ld{top:-320px;bottom:-320px}
-@media (prefers-reduced-motion:reduce){html.ld-on .edge{background:#F6F5F1;animation:none}}
+/* Loader: the page background (and the browser bar colour, via theme-color) is red while it plays,
+   so Safari / in-app browsers don't show a light strip under it; switched back when it ends */
+html.ld-on:not(.ld-done),html.ld-on:not(.ld-done) body{background:#CF453A}
+/* Phones: the header plate also covers what is above it (in-app browsers show page content behind their top bar) */
+@media (max-width:767px){.pg .logo::before{content:'';position:absolute;left:0;right:0;bottom:100%;height:400px;background:#F6F5F1;pointer-events:none}}
 /* bottom bar (phones): the frosted glass sits on a layer clipped to the rounded shape, so no square corners show
    while the bar fades or during page transitions; while pages switch the glass is replaced by a solid tint */
 @media (max-width:767px){
@@ -273,8 +269,6 @@ img.is-loading{background:#ECECEC linear-gradient(100deg,rgba(255,255,255,0) 30%
 </style>
 </head>
 <body>
-<div class="edge edge-top"></div><div class="edge edge-bot"></div>
-
 <a class="skip" href="#main">Skip to content</a>
 <div id="top" class="pg" style="position: relative; font-family: 'DM Sans', system-ui, sans-serif; color: #1E1E1E; background: #F6F5F1; min-height: 100vh; display: flex; flex-direction: column">
 <div class="hdr"><a class="logo" href="/" aria-label="Viktoriia Polotniuk — home" style="display: block; width: 207px; height: 40px; margin: 8px auto 0"><img src="/assets/logo.png" alt="Viktoriia Polotniuk" width="207" height="40" style="display: block; width: 207px; height: 40px; object-fit: contain" decoding="async"></a>
