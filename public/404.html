@@ -68,6 +68,9 @@ html,body{margin:0;height:100%;background:#CF453A}
 ::view-transition-old(site-bnav),::view-transition-new(site-bnav){animation-duration:.25s}
 .nav a[aria-current] .ul{display:none}
 .lb [hidden]{display:none!important}
+/* while a photo is open the page underneath is hidden (after the backdrop has faded in): in-app browsers show page content
+   behind their top bar, where the fixed lightbox can't reach */
+html.lb-lock #top{visibility:hidden;transition:visibility 0s .2s}
 video[data-lb]{background:#ECECEC}
 /* the footer sits in a page-coloured box so the glass band also bends the edges of the red block */
 .foot-wrap{display:flow-root;background:#F6F5F1}
