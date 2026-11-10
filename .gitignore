@@ -1,0 +1,6 @@
+node_modules/
+tools/.shots/
+tools/.og-raw.png
+tools/bin/
+_backup-assets-before-hq/
+.DS_Store

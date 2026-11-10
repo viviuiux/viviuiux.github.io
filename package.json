@@ -1,0 +1,14 @@
+{
+  "name": "viktoriia-polotniuk-portfolio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "start": "npx --yes serve public -l 3000"
+  },
+  "devDependencies": {
+    "ffmpeg-static": "^5.2.0",
+    "puppeteer-core": "^23.11.1",
+    "sharp": "^0.33.5"
+  }
+}

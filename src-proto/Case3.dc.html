@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Case — Smart interior search</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&amp;family=Caveat:wght@500;600&amp;display=swap">
+<style>
+@font-face{font-family:'DeFonte';src:url(/_blob/07a008ec63b0b372ac9c8c1b8b863883) format('truetype');font-weight:400;font-display:swap}
+html{scroll-behavior:smooth}
+body{margin:0;background:#F6F5F1}
+a{color:inherit}
+.nav a{position:relative;width:fit-content;text-decoration:none;color:#5F5D58;transition:color .2s}
+.nav .ul{clip-path:inset(0 100% 0 0);transition:clip-path .35s ease}
+.nav a:hover .ul,.nav a:focus-visible .ul{clip-path:inset(0 0 0 0)}
+.card-link{text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:16px}
+.card-link:hover .ph{background:#E4E4E4}
+.foot a{color:#F8EFDE;text-underline-offset:3px}
+.foot a:hover{opacity:.8}
+/* Keyboard focus = same look as hover (no rings) */
+.nav a:focus-visible,.mnav a:focus-visible,.card-link:focus-visible,.foot a:focus-visible,.crumb a:focus-visible,.logo:focus-visible,.burger:focus-visible{outline:none}
+.card-link:focus-visible{opacity:.8}
+.foot a:focus-visible,.mnav a:focus-visible,.crumb a:focus-visible{opacity:.8}
+.totop:focus-visible img{transform:rotate(15deg)}
+.burger{border-radius:12px;transition:background-color .15s ease}
+.burger:active{background:#E8E6E0}
+/* Email: click copies the address, a small tooltip confirms */
+.foot a.em-copy{position:relative}
+.foot a.em-copy::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 12px);transform:translate(-50%,4px);background:#1E1E1E;color:#F6F5F1;font:500 13px/1 'DM Sans',sans-serif;letter-spacing:0;padding:9px 12px;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease}
+.foot a.em-copy::before{content:'';position:absolute;left:50%;bottom:calc(100% + 1px);transform:translate(-50%,4px);border:6px solid transparent;border-top-color:#1E1E1E;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease}
+.foot a.em-copy.copied::after,.foot a.em-copy.copied::before{opacity:1;transform:translate(-50%,0)}
+
+.foot .totop:hover{opacity:1}
+.totop img{transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+.totop:hover img{transform:rotate(15deg)}
+.nav a[target="_blank"],.mnav a[target="_blank"]{display:inline-flex;align-items:center}
+.nav a[target="_blank"]::after,.mnav a[target="_blank"]::after{content:'';display:block;flex:0 0 auto;width:.7em;height:.7em;margin-left:.2em;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 9.5 L9.3 2.7 M4 2.5 H9.5 V8' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 9.5 L9.3 2.7 M4 2.5 H9.5 V8' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;transition:transform .2s ease-out}
+.nav a[target="_blank"]:hover::after{transform:translate(2px,-2px)}
+/* page transition (cover grows) is switched off in the prototype: the canvas did not open cases on the first click with it. For the real site add: @view-transition{navigation:auto} */
+.logo{view-transition-name:site-logo} .side{view-transition-name:site-side} .burger{view-transition-name:site-burger}
+::view-transition-old(root){animation:vt-out .3s ease-out both}
+::view-transition-new(root){animation:vt-in .38s cubic-bezier(.2,.7,.2,1) .35s both}
+::view-transition-group(*){animation-duration:.6s;animation-timing-function:cubic-bezier(.65,0,.25,1)}
+@keyframes vt-out{to{opacity:0}}
+@keyframes vt-in{from{opacity:0;transform:translateY(12px)}}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
+.cur-sq{position:fixed;left:0;top:0;width:10px;height:10px;pointer-events:none;z-index:2000;display:none}
+.cur-sq::after{content:'';position:absolute;inset:0;background:#CF453A;transition:transform .15s ease-out,background .15s}
+.cur-sq.big::after{transform:scale(1.5)}
+.cur-sq.light::after{background:#F6F5F1}
+.cur-lb.light{color:#F8EFDE}
+.cur-lb{position:fixed;left:0;top:0;font-family:'DeFonte', 'DM Sans', sans-serif;font-size:16px;line-height:22px;color:#CF453A;white-space:nowrap;pointer-events:none;z-index:2000;opacity:0;transition:opacity .15s;display:none}
+.cur-cv{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:1999}
+html.cur-none,html.cur-none *{cursor:none!important}
+html.cur-drawn,html.cur-drawn *{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 32 32'%3E%3Cpath d='M4.5 3.2 C 4.8 10, 5.3 17, 5.6 24.6 C 7.6 22.4, 9.4 20.6, 11.3 19 C 12.8 22, 14.1 25, 15.6 28.1 C 16.6 27.7, 17.7 27.2, 18.8 26.6 C 17.3 23.6, 15.9 20.7, 14.4 17.8 C 17.2 17.5, 20.1 17.3, 23.1 17.2 C 17 12.6, 10.9 7.9, 4.5 3.2 Z' fill='%23FFFFFF' stroke='%23CF453A' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E") 3 2,auto!important}
+html.cur-drawn :is(a,button,label,[role=button]),html.cur-drawn :is(a,button,label,[role=button]) *{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 32 32'%3E%3Cpath d='M11.2 15.6 L11 5.6 C10.9 3.7 13.9 3.6 14 5.5 L14.3 13.2 C14.3 11.6 17.1 11.5 17.2 13.1 L17.3 14.3 C17.4 12.8 20.1 12.8 20.2 14.4 L20.3 15.4 C20.4 14 23.1 14 23.1 15.6 L23.2 21.2 C23.3 25.6 20.6 28.6 16.6 28.5 L15 28.5 C12.6 28.4 11 27.4 9.6 25.4 L5.8 20.1 C4.8 18.6 6.6 16.9 8 17.9 Z' fill='%23FFFFFF' stroke='%23CF453A' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E") 9 3,pointer!important}
+.burger,.mnav,#mnav{display:none}
+.hdr{display:contents}
+p,li,h1,h2,h3,figcaption{text-wrap:pretty}
+.logo{position:sticky;top:8px;z-index:50;transition:transform .35s ease,opacity .35s ease}
+.pg .logo{top:0!important;width:100%!important;height:64px!important;margin:0!important;display:flex!important;align-items:center;justify-content:center;background:transparent;border-bottom:0;box-sizing:border-box;transition:transform .35s ease,opacity .35s ease}
+.pg.scrolled .logo{background:#F6F5F1}
+.hero-flower{z-index:60}
+.pg .crumb{position:fixed!important;z-index:52;top:21px!important;transition:transform .35s ease,opacity .35s ease}
+@media (min-width: 768px){.pg.hdr-hide .crumb{transform:translateY(-72px);opacity:0;pointer-events:none}}
+@media (min-width: 768px){.pg .lay{margin-top:-8px}}
+.pg.hdr-hide .logo{transform:translateY(-72px);opacity:0;pointer-events:none}
+.stk-stage{display:flex;flex-direction:column;gap:32px}
+.stk.on .stk-stage{display:block}
+.stk.on{display:block;position:relative}
+.stk.on .stk-stage{position:sticky;top:0;height:100vh;overflow:visible}
+.stk.on .stk-card{position:absolute;left:0;right:0;top:0;background:#F6F5F1;will-change:transform;transform-origin:50% 0}
+.stk.on .stk-card .ph{box-shadow:0 -10px 28px rgba(30,30,30,.07)}
+.portrait{position:relative;overflow:hidden;background:#ECECEC}
+.portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ab-photos-m{display:none!important}
+@media (min-width: 768px) and (max-width: 1100px){
+.pg .lay{grid-template-columns:184px minmax(0,1fr) 32px!important}
+.pg .side{padding-left:28px!important}
+.ab-grid{grid-template-columns:200px minmax(0,1fr)!important;gap:32px!important}
+.ab-portrait{width:200px!important;height:250px!important}
+.ab-row{grid-template-columns:200px minmax(0,1fr)!important;gap:32px!important}
+.pg .crumb{left:28px!important;max-width:calc(50% - 150px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+@media (max-width: 767px){
+.pg .hdr{display:block;position:sticky;top:0;z-index:55}
+.pg .hdr .logo{position:relative!important}
+.pg .hdr .burger{position:absolute!important;top:4px;right:8px}
+.cfacts{flex-direction:column!important;gap:20px!important}
+.ab-portrait img{object-position:50% 25%}
+.pg .side{display:none!important}
+.pg .lay{display:block!important;padding:24px 20px 0!important}
+.hero{margin-top:64px}
+.pg .logo{position:sticky!important;top:0!important;width:100%!important;height:56px!important;margin:0!important;display:flex!important;align-items:center;justify-content:center;background:#F6F5F1;border-bottom:0;box-sizing:border-box}
+.pg.hdr-hide .logo,.pg.hdr-hide .burger{transform:none!important;opacity:1!important;pointer-events:auto!important}
+.pg .logo img{width:160px!important;height:31px!important}
+.pg .crumb{position:static!important;padding:20px 20px 0;font-size:14px!important}
+.pg .fgap{flex-basis:80px!important}
+.burger{display:flex;position:fixed;top:4px;right:8px;z-index:60!important;transition:transform .35s ease,opacity .35s ease;width:48px;height:48px;align-items:center;justify-content:center;cursor:pointer;z-index:5}
+.burger span,.burger span::before,.burger span::after{display:block;width:22px;height:2px;background:#1E1E1E;border-radius:2px;position:relative;content:''}
+.burger span::before{position:absolute;top:-7px}.burger span::after{position:absolute;top:7px}
+#mnav:checked ~ .mnav{display:flex}
+.pg.hdr-hide .burger{transform:translateY(-72px);opacity:0;pointer-events:none}
+.mnav{position:fixed;inset:0;z-index:1000;background:#F6F5F1;flex-direction:column;padding:24px 20px;box-sizing:border-box}
+.mnav-close span{position:relative;display:block;width:24px;height:2px}
+.mnav-close span::before,.mnav-close span::after{content:'';position:absolute;left:0;top:0;width:24px;height:2px;background:#1E1E1E;border-radius:2px}
+.mnav-close span::before{transform:rotate(45deg)}.mnav-close span::after{transform:rotate(-45deg)}
+.mnav-close{position:absolute;top:4px;right:8px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:30px;line-height:1;color:#1E1E1E;cursor:pointer}
+.mnav nav{margin:auto 0;display:flex;flex-direction:column;align-items:center;gap:20px;font-family:'DeFonte', 'DM Sans', sans-serif}
+.mnav nav a{font-size:28px;line-height:1.2;text-decoration:none;color:#5F5D58}
+.mnav nav a.on{color:#CF453A}
+.foot{margin:0 8px 8px!important;padding:36px 20px 28px!important;min-height:0!important}
+.foot .foot-title{font-size:36px!important;line-height:1.05!important;padding-right:64px}
+.foot .foot-links{gap:20px!important;font-size:16px!important}
+.foot .foot-right{width:100%;align-items:flex-start!important;gap:0!important}
+.foot .totop{position:absolute;top:34px;right:20px;width:44px!important;height:44px!important}
+.foot .totop img{width:44px!important;height:44px!important}
+.hero-h1{font-size:34px!important}
+.hero-flower{width:104px!important;height:104px!important;left:-8px!important;top:-92px!important}
+.hero-p{font-size:17px!important;line-height:1.45!important}
+.card-link .ph{height:220px!important}
+.stk-stage{gap:40px!important}
+.card-link{gap:12px!important}
+.cmeta{row-gap:2px!important;font-size:15px!important}
+.cmeta .cm-name{flex-basis:100%}
+.cmeta .cm-name + span{display:none}
+.case-cover{height:220px!important}
+.case-h1{font-size:26px!important}
+.case-wrap{gap:20px!important}
+.case-in{gap:24px!important}
+.mets{flex-wrap:wrap!important;row-gap:20px!important}
+.mets > div{flex:1 1 40%!important}
+.proc{padding-left:0!important;--lw:48px!important;--th:30px!important}
+.proc-t{font-size:24px!important}
+.proc-s{padding-bottom:28px}
+.phones{gap:12px!important}
+.phones > div{flex:1 1 40%!important;height:240px!important}
+.ab-grid{display:flex!important;flex-direction:column!important;gap:24px!important}
+.ab-pwrap{align-self:stretch!important;width:100%}
+.ab-portrait{position:relative!important;top:0!important;width:100%!important;height:auto!important;aspect-ratio:6/7}
+.ab-row{grid-template-columns:1fr!important;gap:12px!important}
+.ab-photos{display:none!important}
+.ab-photos-m{display:grid!important}
+.ab-out{gap:12px!important;align-items:flex-start!important;flex-direction:column-reverse!important}
+.ab-out > div{flex:none!important;width:100%}
+.ab-txt{font-size:15px!important;line-height:1.6!important}
+.ab-row p{font-size:15px!important;line-height:1.6!important}
+.ab-h1{font-size:28px!important}
+.ab-smile{width:64px!important;height:64px!important;flex-basis:64px!important}
+}
+
+/* image zoom (lightbox) */
+html:not(.cur-drawn) img[data-zoom]{cursor:pointer}
+img[data-zoom]:focus-visible{outline:2px solid #CF453A;outline-offset:4px}
+html.lb-lock{overflow:hidden}
+.lb-badge{position:fixed;z-index:45;width:40px;height:40px;border-radius:50%;background:rgba(246,245,241,.94);display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transform:scale(.9);transition:opacity .2s ease,transform .2s ease}
+.lb-badge.on{opacity:1;transform:none}
+.lb{position:fixed;inset:0;z-index:200;background:rgba(246,245,241,calc(.97 * var(--fade,1)));opacity:0;pointer-events:none;transition:opacity .25s ease;font-family:'DM Sans',system-ui,sans-serif}
+.lb.on{opacity:1;pointer-events:auto}
+.lb-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:72px 128px 72px;box-sizing:border-box;touch-action:none}
+.lb-img{display:block;max-width:100%;max-height:100%;object-fit:contain;transform-origin:center;user-select:none;-webkit-user-drag:none}
+.lb-cnt{position:absolute;left:40px;top:26px;font-size:14px;color:#6D6D6D;transition:opacity .2s}
+.lb-btn{position:absolute;top:50%;margin-top:-24px;width:48px;height:48px;padding:0;border:1.5px solid #B4B1AA;border-radius:50%;background:transparent;color:#6D6D6D;display:flex;align-items:center;justify-content:center;transition:background-color .15s ease,color .15s ease,opacity .2s}
+.lb-btn:hover{border-color:#1E1E1E;color:#1E1E1E}
+.lb-prev{left:40px}.lb-next{right:40px}
+.lb-x{position:absolute;z-index:2;top:12px;right:24px;width:48px;height:48px;padding:0;border:0;border-radius:12px;background:transparent;display:flex;align-items:center;justify-content:center;transition:background-color .15s ease}
+.lb-x:hover{background:rgba(30,30,30,.06)}
+.lb-x span{position:relative;display:block;width:24px;height:2px}
+.lb-x span::before,.lb-x span::after{content:'';position:absolute;left:0;top:0;width:24px;height:2px;background:#1E1E1E;border-radius:2px}
+.lb-x span::before{transform:rotate(45deg)}.lb-x span::after{transform:rotate(-45deg)}
+.lb-btn:focus-visible,.lb-x:focus-visible{outline:2px solid #CF453A;outline-offset:2px}
+.lb.zoomed .lb-btn,.lb.zoomed .lb-cnt{opacity:0;pointer-events:none}
+.lb.single .lb-btn,.lb.single .lb-cnt{display:none}
+@media (max-width:767px){.lb-stage{padding:64px 12px 64px}.lb-btn{display:none}.lb-cnt{left:20px;top:20px}}
+@media (prefers-reduced-motion: reduce){.lb,.lb-img{transition:none!important}}
+
+@media (hover: hover){.foot a.em-copy:hover::after,.foot a.em-copy:hover::before{opacity:1;transform:translate(-50%,0)}}
+.foot a.em-copy:focus-visible::after,.foot a.em-copy:focus-visible::before{opacity:1;transform:translate(-50%,0)}
+
+.pg .logo .rp{display:none}
+@media (max-width:767px){.pg .logo .rp{display:block;position:absolute;left:0;bottom:0;width:100%;height:2px;background:#CF453A;transform-origin:left;transform:scaleX(0);pointer-events:none}}
+
+html.cur-drawn.cur-scrolling :is(a,button,label,[role=button]),html.cur-drawn.cur-scrolling :is(a,button,label,[role=button]) *{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 32 32'%3E%3Cpath d='M4.5 3.2 C 4.8 10, 5.3 17, 5.6 24.6 C 7.6 22.4, 9.4 20.6, 11.3 19 C 12.8 22, 14.1 25, 15.6 28.1 C 16.6 27.7, 17.7 27.2, 18.8 26.6 C 17.3 23.6, 15.9 20.7, 14.4 17.8 C 17.2 17.5, 20.1 17.3, 23.1 17.2 C 17 12.6, 10.9 7.9, 4.5 3.2 Z' fill='%23FFFFFF' stroke='%23CF453A' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E") 3 2,auto!important}
+
+.mnav nav a{position:relative}
+.mnav nav a::before{content:'';position:absolute;left:0;right:0;bottom:-6px;height:10px;background:center/100% 100% no-repeat;clip-path:inset(0 100% 0 0);transition:clip-path .35s ease;pointer-events:none}
+.mnav nav a[href*="Main"]::before{background-image:url(/_blob/70b97cd764b5638fdaaabbf91846dda8)}
+.mnav nav a[href*="About"]::before{background-image:url(/_blob/5a0dafca40f6f5f880f0e206891970f4)}
+.mnav nav a[href*="Experiments"]::before{background-image:url(/_blob/2a4a56b4a30395869b26d71e82775caa)}
+.mnav nav a[target="_blank"]::before{background-image:url(/_blob/b9022cf4800f7730de122cc446fa53d8);right:.9em}
+@media (hover: hover){.mnav nav a:not(.on):hover::before,.mnav nav a:not(.on):focus-visible::before{clip-path:inset(0 0 0 0)}}
+
+/* mobile bottom navigation (replaces the burger menu): floating glass bar, hand-drawn icons, solid red current tab */
+.bnav{display:none;view-transition-name:site-bnav}
+@media (max-width:767px){
+.burger,.mnav,#mnav{display:none!important}
+.bnav{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom, 0px));z-index:58;display:flex;gap:4px;padding:6px;border-radius:22px;background:rgba(246,245,241,.82);-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 0 0 1px rgba(255,255,255,.35),0 8px 28px rgba(30,30,30,.16);transition:transform .35s ease,opacity .35s ease}
+.bnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;border-radius:16px;font-family:'DeFonte','DM Sans',sans-serif;font-size:15px;line-height:1.1;color:#1E1E1E;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:background-color .25s ease,color .25s ease}
+.bnav a.on{background:#CF453A;color:#F6F5F1}
+.bnav i{display:block;width:26px;height:26px;background:currentColor;-webkit-mask:var(--m);mask:var(--m)}
+.bnav .bi-w{--m:url(/_blob/e06906ff4c21a5390a33ef94bf573ddd) center/contain no-repeat}
+.bnav .bi-a{--m:url(/_blob/d06cbfb04bfcf92f9ac087d69f59bd24) center/contain no-repeat}
+.bnav .bi-r{--m:url(/_blob/30977e6bb2a225e7101dab760e90c0bf) center/contain no-repeat;width:23px;height:23px;margin:1.5px 0;transform:rotate(45deg)}
+.pg.hdr-hide .bnav,.pg.at-end .bnav{transform:translateY(calc(100% + 40px));opacity:0;pointer-events:none}
+.lb-x{top:4px!important;right:8px!important;left:auto!important}
+}
+@media (hover: hover){.bnav a:not(.on):hover{background:rgba(30,30,30,.06)}}
+.bnav a:focus-visible{outline:2px solid #CF453A;outline-offset:2px}
+</style>
+</helmet>
+<div id="top" class="pg" style="position: relative; font-family: 'DM Sans', system-ui, sans-serif; color: #1E1E1E; background: #F6F5F1; min-height: 100vh; display: flex; flex-direction: column">
+<div class="hdr"><a class="logo" href="Main.dc.html" aria-label="Viktoriia Polotniuk — home" style="display: block; width: 207px; height: 40px; margin: 16px auto 0"><img src="/_blob/d193d1e946961b8408fbee9548fafa9d" alt="Viktoriia Polotniuk" width="207" height="40" style="display: block; width: 207px; height: 40px; object-fit: contain"></a>
+<nav class="bnav" aria-label="Site"><a href="Main.dc.html" class="on" aria-current="page"><i class="bi-w" aria-hidden="true"></i><span>Work</span></a><a href="About.dc.html"><i class="bi-a" aria-hidden="true"></i><span>About me</span></a><a href="https://drive.google.com/file/d/1aOKujYnb-7EAlLjyKaRxROVOKjDd-9_z/view" target="_blank" rel="noopener"><i class="bi-r" aria-hidden="true"></i><span>Resume</span></a></nav><input type="checkbox" id="mnav" aria-hidden="true"><label class="burger" for="mnav" aria-label="Open menu"><span></span></label><div class="mnav" role="dialog" aria-label="Menu"><label class="mnav-close" for="mnav" aria-label="Close menu"><span></span></label><nav aria-label="Site"><a href="Main.dc.html" class="on">Work</a><a href="About.dc.html">About me</a><a href="https://drive.google.com/file/d/1aOKujYnb-7EAlLjyKaRxROVOKjDd-9_z/view" target="_blank" rel="noopener">Resume</a></nav></div></div>
+<div class="crumb" style="position: absolute; left: 40px; top: 26px; font-size: 16px; line-height: normal; color: #6D6D6D"><a href="Main.dc.html" style="color: #6D6D6D; text-decoration: none">Work /</a> <span style="color: #1E1E1E">Smart interior search</span></div>
+<div class="lay" style="display: grid; grid-template-columns: minmax(240px, 1fr) minmax(0, 756px) minmax(24px, 1fr); padding: 39px 0 0">
+<aside class="side" style="padding: 148px 0 0 40px"><nav class="nav" aria-label="{{navLabel}}" style="position: sticky; top: 243px; display: flex; flex-direction: column; gap: 20px; font-family: 'DeFonte', 'DM Sans', sans-serif; font-size: 16px; line-height: normal">
+<sc-for list="{{nav}}" as="item" hint-placeholder-count="9">
+<a href="{{item.href}}" target="{{item.target}}" rel="{{item.rel}}" style="{{item.style}}">{{item.label}}<img class="ul" src="{{item.line}}" alt="" width="{{item.lw}}" height="{{item.lh}}" style="{{item.lineStyle}}"></a>
+</sc-for>
+</nav></aside>
+<main style="min-width: 0">
+<div class="case-wrap" style="display: flex; flex-direction: column; align-items: center; gap: 31px">
+<img class="ph case-cover" src="/_blob/c2d47ba7ef1f267a1a9d2b025a1440ad" alt="Smart interior search filters" style="view-transition-name: cv-Case3; display: block; width: 100%; height: 320px; object-fit: cover">
+<div class="case-in" style="width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 31px">
+<h1 class="case-h1" style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 36px; line-height: normal; color: #1E1E1E">Smart interior search</h1>
+<div style="display: flex; flex-direction: column; gap: 24px">
+<div class="cfacts" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px"><div style="display: flex; flex-direction: column; gap: 4px; font-weight: 500; line-height: 1.5; white-space: nowrap"><div style="font-size: 14px; color: #5F5D58">Timeline</div><div style="display: flex; flex-direction: column; gap: 4px; font-size: 16px; color: #1E1E1E"><div>1 month</div></div></div><div style="display: flex; flex-direction: column; gap: 4px; font-weight: 500; line-height: 1.5; white-space: nowrap"><div style="font-size: 14px; color: #5F5D58">Team</div><div style="display: flex; flex-direction: column; gap: 4px; font-size: 16px; color: #1E1E1E"><div>Product designer (me)</div><div>Art director</div><div>iOS developer</div></div></div><div style="display: flex; flex-direction: column; gap: 4px; font-weight: 500; line-height: 1.5; white-space: nowrap"><div style="font-size: 14px; color: #5F5D58">Skills</div><div style="display: flex; flex-direction: column; gap: 4px; font-size: 16px; color: #1E1E1E"><div>Research</div><div>Analytics</div><div>AI feature design</div></div></div></div>
+<div class="mets" style="display: flex; gap: 24px; padding: 24px 0 20px; border-top: 1px solid #E2DACB; border-bottom: 1px solid #E2DACB"><div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px"><div role="img" aria-label="~1,000"><img src="/_blob/aa2e8f8bc0d4aa507763f1a6d22e70f1" alt="" width="109" height="40" style="display: block; width: 109px; height: 40px"></div><div style="font-size: 14px; font-weight: 500; line-height: 1.5; color: #5F5D58">interiors in the library</div></div><div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px"><div role="img" aria-label="+26%"><img src="/_blob/3af3175161cde3cfaab498ec2489c23d" alt="" width="74" height="40" style="display: block; width: 74px; height: 40px"></div><div style="font-size: 14px; font-weight: 500; line-height: 1.5; color: #5F5D58">exports with AI picks</div></div><div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px"><div role="img" aria-label="9 → 5"><img src="/_blob/e6618ca1f693231323823d03afe827e5" alt="" width="69" height="40" style="display: block; width: 69px; height: 40px"></div><div style="font-size: 14px; font-weight: 500; line-height: 1.5; color: #5F5D58">interiors before export, with filters</div></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 32px">
+<section id="impact" style="scroll-margin-top: 40px; display: flex; flex-direction: column; gap: 8px"><h2 style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 20px; line-height: normal; color: #1E1E1E">My Impact</h2><p style="margin: 0; font-size: 16px; line-height: 1.5; color: #5F5D58">I led the research, analytics and design of smart search for Smartist’s interior library: filters people set themselves and AI picks matched to their artwork. Users who viewed AI-recommended interiors exported 26% more often, and those who used filters got to an export after opening 5 interiors instead of 9.</p></section><section id="context" style="scroll-margin-top: 40px; display: flex; flex-direction: column; gap: 8px"><h2 style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 20px; line-height: normal; color: #1E1E1E">Context</h2><p style="margin: 0; font-size: 16px; line-height: 1.5; color: #5F5D58">Smartist lets artists photograph a painting and see how it looks on a wall. They can choose a room from Smartist’s library of nearly 1,000 interiors or upload their own. But the library was one long feed: people scrolled, opened interiors one by one and picked by eye. On average, people opened 9 interiors before exporting one, and the export rate stayed low. After smart search, it took 5.</p></section><img src="/_blob/475da8f3bfaa2c8bca3eefd2ab56e36a" alt="An artwork shown in an interior in Smartist" width="600" height="334" style="display: block; width: 100%; height: auto"><section id="challenge" style="scroll-margin-top: 40px; display: flex; flex-direction: column; gap: 8px"><h2 style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 20px; line-height: normal; color: #1E1E1E">Challenge</h2><p style="margin: 0; font-size: 16px; line-height: 1.5; color: #5F5D58">Help people find a room that shows their artwork at its best — without browsing a thousand of them. Search had to work both for people who know the room they want and for those who just want their painting to look good, and ship on iOS within a month with one developer.</p></section><img src="/_blob/932ede9ff3af96205ecad687dd379356" alt="Rooms, old version" width="600" height="320" style="display: block; width: 100%; height: auto"><section id="process" style="scroll-margin-top: 40px; display: flex; flex-direction: column; gap: 8px"><h2 style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 20px; line-height: normal; color: #1E1E1E">Process</h2><p style="margin: 0; font-size: 16px; line-height: 1.5; color: #5F5D58">One month from the first data to a tested feature — step by step.</p></section><div class="proc" role="group" aria-label="Process: Research, Define, Explore, Design, Impact." style="--lw: 64px; --th: 40px; display: flex; flex-direction: column; padding: 4px 0 8px 40px"><div class="proc-r" style="display: grid; grid-template-columns: var(--lw) minmax(0, 1fr); column-gap: 16px"><div style="display: flex; flex-direction: column; align-items: center"><img src="/_blob/f57fea4121ed87570bfc5a2a50bce12f" alt="" style="display: block; width: var(--lw); height: calc(var(--lw) * 0.6837); flex: 0 0 auto"><img class="proc-seg" src="/_blob/96f71adaee8efdae7a3b3d23fae25654" alt="" style="display: block; width: var(--lw); flex: 1 1 auto; min-height: 16px; height: 0; object-fit: fill"></div><div class="proc-s" style="display: flex; flex-direction: column; gap: 8px; padding-top: max(0px, calc(var(--lw) * 0.2551 - var(--th) / 2)); padding-bottom: 40px"><div class="proc-t" style="font-family: 'DeFonte', 'DM Sans', sans-serif; font-size: 32px; line-height: var(--th); color: #CF453A">RESEARCH</div><div style="display: flex; flex-direction: column; gap: 4px; font-size: 16px; font-weight: 500; line-height: 1.35; color: #5F5D58"><div>Analysis of interiors opened and exported</div><div>Research of interior design services</div><div>Analysis of their search and filters</div></div></div></div><div class="proc-r" style="display: grid; grid-template-columns: var(--lw) minmax(0, 1fr); column-gap: 16px"><div style="display: flex; flex-direction: column; align-items: center"><img src="/_blob/7acd15d8e521dcc6fcaae06208d47686" alt="" style="display: block; width: var(--lw); height: calc(var(--lw) * 0.8571); flex: 0 0 auto"><img class="proc-seg" src="/_blob/0ab206f1aaf3035e4c46b9e5e34ce3b9" alt="" style="display: block; width: var(--lw); flex: 1 1 auto; min-height: 16px; height: 0; object-fit: fill"></div><div class="proc-s" style="display: flex; flex-direction: column; gap: 8px; padding-top: max(0px, calc(var(--lw) * 0.4299 - var(--th) / 2)); padding-bottom: 40px"><div class="proc-t" style="font-family: 'DeFonte', 'DM Sans', sans-serif; font-size: 32px; line-height: var(--th); color: #CF453A">DEFINE</div><div style="display: flex; flex-direction: column; gap: 4px; font-size: 16px; font-weight: 500; line-height: 1.35; color: #5F5D58"><div>Filter list with the art director</div><div>Painting sizes and units from competitors</div></div></div></div><div class="proc-r" style="display: grid; grid-template-columns: var(--lw) minmax(0, 1fr); column-gap: 16px"><div style="display: flex; flex-direction: column; align-items: center"><img src="/_blob/4630080e8a3c09d1b4242d380695d9ed" alt="" style="display: block; width: var(--lw); height: calc(var(--lw) * 0.8571); flex: 0 0 auto"><img class="proc-seg" src="/_blob/a4477b8bb05338629bc2b21b09d0630b" alt="" style="display: block; width: var(--lw); flex: 1 1 auto; min-height: 16px; height: 0; object-fit: fill"></div><div class="proc-s" style="display: flex; flex-direction: column; gap: 8px; padding-top: max(0px, calc(var(--lw) * 0.4286 - var(--th) / 2)); padding-bottom: 40px"><div class="proc-t" style="font-family: 'DeFonte', 'DM Sans', sans-serif; font-size: 32px; line-height: var(--th); color: #CF453A">EXPLORE</div><div style="display: flex; flex-direction: column; gap: 4px; font-size: 16px; font-weight: 500; line-height: 1.35; color: #5F5D58"><div>Option 1: filters only</div><div>Option 2: filters + AI recommendations</div><div>Choice: both</div></div></div></div><div class="proc-r" style="display: grid; grid-template-columns: var(--lw) minmax(0, 1fr); column-gap: 16px"><div style="display: flex; flex-direction: column; align-items: center"><img src="/_blob/86cecf3e4cdb19b948d876e2de2f4a86" alt="" style="display: block; width: var(--lw); height: calc(var(--lw) * 0.8571); flex: 0 0 auto"><img class="proc-seg" src="/_blob/fc2bef24cd974111e410908e475d49bc" alt="" style="display: block; width: var(--lw); flex: 1 1 auto; min-height: 16px; height: 0; object-fit: fill"></div><div class="proc-s" style="display: flex; flex-direction: column; gap: 8px; padding-top: max(0px, calc(var(--lw) * 0.4286 - var(--th) / 2)); padding-bottom: 40px"><div class="proc-t" style="font-family: 'DeFonte', 'DM Sans', sans-serif; font-size: 32px; line-height: var(--th); color: #CF453A">DESIGN</div><div style="display: flex; flex-direction: column; gap: 4px; font-size: 16px; font-weight: 500; line-height: 1.35; color: #5F5D58"><div>Filters</div><div>“Recommended” tab</div><div>AI picks for the user’s painting</div></div></div></div><div class="proc-r" style="display: grid; grid-template-columns: var(--lw) minmax(0, 1fr); column-gap: 16px"><div style="display: flex; flex-direction: column; align-items: center"><img src="/_blob/33d85d32c3344e191ff00d5f4499b301" alt="" style="display: block; width: var(--lw); height: calc(var(--lw) * 0.8197); flex: 0 0 auto"></div><div class="proc-s" style="display: flex; flex-direction: column; gap: 8px; padding-top: max(0px, calc(var(--lw) * 0.4299 - var(--th) / 2)); padding-bottom: 0px"><div class="proc-t" style="font-family: 'DeFonte', 'DM Sans', sans-serif; font-size: 32px; line-height: var(--th); color: #CF453A">IMPACT</div><div style="display: flex; flex-direction: column; gap: 4px; font-size: 16px; font-weight: 500; line-height: 1.35; color: #5F5D58"><div>+26% exports with AI picks</div><div>9 → 5 interiors before export</div></div></div></div></div><section id="scenes" style="scroll-margin-top: 40px; display: flex; flex-direction: column; gap: 12px"><h2 style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 20px; line-height: normal; color: #1E1E1E">Behind the scenes</h2><div style="display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 16px; line-height: 1.5; color: #1E1E1E">Learning a new domain</h3><p style="margin: 0; font-size: 16px; line-height: 1.5; color: #5F5D58">The hardest part for me was deciding which filters people actually need. Interior styles and formats were new to me, and so was the question of what makes a painting look right in a room. So I built the scope from three sources:</p><ul style="margin: 0; padding-left: 24px; font-size: 16px; line-height: 1.5; color: #5F5D58"><li style="margin-bottom: 4px">Our analytics — which interiors people opened most and which they exported.</li><li style="margin-bottom: 4px">Popular interior design services — how they organise search and filters. From them we took painting sizes, units of measurement and some style names.</li><li style="margin-bottom: 4px">The art director’s expertise in galleries and art, which shaped the full list of styles.</li></ul></div></section><img src="/_blob/591108680105987ccf209d125306b570" alt="Research of art and interior services" width="600" height="293" style="display: block; width: 100%; height: auto"><section id="decisions" style="scroll-margin-top: 40px; display: flex; flex-direction: column; gap: 20px"><h2 style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 20px; line-height: normal; color: #1E1E1E">Key decisions</h2><div style="display: flex; flex-direction: column; gap: 16px"><div style="display: flex; gap: 16px; align-items: flex-start"><div role="img" aria-label="01" style="position: relative; flex: 0 0 56px; height: 56px; overflow: hidden"><img src="/_blob/9669209268b10b69338ce233b2fa168c" alt="" width="107" height="67" style="position: absolute; left: -23px; top: -5px; width: 107px; height: 67px"></div><div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 16px; line-height: 1.5; color: #1E1E1E">Ship filters and AI picks together</h3><p style="margin: 0; font-size: 16px; line-height: 1.5; color: #5F5D58">Instead of filters first and AI later: the two serve different people — filters for those who know the room they want, AI for those who don’t — so we launched both at once.</p></div></div><div style="height: 1px; background: #E2DACB"></div><div style="display: flex; gap: 16px; align-items: flex-start"><div role="img" aria-label="02" style="position: relative; flex: 0 0 56px; height: 56px; overflow: hidden"><img src="/_blob/239c1162289d17a98383ca5ad9621e48" alt="" width="103" height="65" style="position: absolute; left: -22px; top: -3px; width: 103px; height: 65px"></div><div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 16px; line-height: 1.5; color: #1E1E1E">Give recommendations their own tab</h3><p style="margin: 0; font-size: 16px; line-height: 1.5; color: #5F5D58">Instead of mixing AI picks into the feed: a “Recommended” tab right next to All interiors, one tap away, while the full library stays intact for people who like to browse.</p></div></div><div style="height: 1px; background: #E2DACB"></div><div style="display: flex; gap: 16px; align-items: flex-start"><div role="img" aria-label="03" style="position: relative; flex: 0 0 56px; height: 56px; overflow: hidden"><img src="/_blob/8713dda87435d7230ba0555435f365fc" alt="" width="56" height="56" style="position: absolute; left: 0px; top: 0px; width: 56px; height: 56px"></div><div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 16px; line-height: 1.5; color: #1E1E1E">Filter by the painting, not just the room</h3><p style="margin: 0; font-size: 16px; line-height: 1.5; color: #5F5D58">Instead of room type and style only: filters also cover painting size and photo orientation, because the room has to fit the artwork, not just look nice.</p></div></div></div></section><div aria-hidden="true" style="display: flex; justify-content: center"><img src="/_blob/5e54ba254c23b16065d3f798e462b257" alt="" width="140" height="140" style="display: block; width: 140px; height: 140px"></div><section id="experience" style="scroll-margin-top: 40px; display: flex; flex-direction: column; gap: 8px"><h2 style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 20px; line-height: normal; color: #1E1E1E">New experience</h2><p style="margin: 0; font-size: 16px; line-height: 1.5; color: #5F5D58">Find a room for your painting in a few taps — set the filters yourself or let AI pick.</p></section><img src="/_blob/3d5e1e26a5cebe02666831d815fec323" alt="Before: one long feed of interiors" width="600" height="332" style="display: block; width: 100%; height: auto"><img src="/_blob/5a59e0905c34c343de9ddbb630949972" alt="After: filters and smart recommendations" width="600" height="546" style="display: block; width: 100%; height: auto"><img src="/_blob/604769db43a74795886aeaed0032a32f" alt="Recommended interiors and an artwork in a room" width="600" height="352" style="display: block; width: 100%; height: auto"><section id="outcome" style="scroll-margin-top: 40px; display: flex; flex-direction: column; gap: 24px"><div style="display: flex; flex-direction: column; gap: 8px"><h2 style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 20px; line-height: normal; color: #1E1E1E">Outcome</h2><p style="margin: 0; font-size: 16px; line-height: 1.5; color: #5F5D58">In testing, both parts of smart search did their job: AI picks led to more exports, and filters cut the browsing.</p></div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px"><div style="background: #ECECEC; min-height: 220px; box-sizing: border-box; padding: 20px 16px; display: flex; flex-direction: column; gap: 8px"><div role="img" aria-label="+26%"><img src="/_blob/3af3175161cde3cfaab498ec2489c23d" alt="" width="104" height="56" style="display: block; width: 104px; height: 56px"></div><p style="margin: 0; font-size: 16px; line-height: 1.5; color: #5F5D58">more exports among users who viewed AI-recommended interiors, compared with those who browsed the library on their own.</p></div><div style="background: #ECECEC; min-height: 220px; box-sizing: border-box; padding: 20px 16px; display: flex; flex-direction: column; gap: 8px"><div role="img" aria-label="9 → 5"><img src="/_blob/e6618ca1f693231323823d03afe827e5" alt="" width="97" height="56" style="display: block; width: 97px; height: 56px"></div><p style="margin: 0; font-size: 16px; line-height: 1.5; color: #5F5D58">interiors opened before an export by users who used filters, down from 9 on average before.</p></div></div></section>
+<div aria-hidden="true" style="display: flex; justify-content: center"><img src="/_blob/72d0a2cb3483c4b1d45504f4d9a39afe" alt="" width="140" height="140" style="display: block; width: 140px; height: 140px"></div>
+<div style="display: flex; flex-direction: column; gap: 16px; padding-top: 40px"><h2 style="margin: 0; font-family: 'DeFonte', 'DM Sans', sans-serif; font-weight: 400; font-size: 20px; line-height: normal; color: #1E1E1E">Next case</h2><a class="card-link" href="Case4.dc.html"><img class="ph" src="/_blob/27ee6a10b4217d2d6328acd4b040fbc7" alt="An artwork placed on a wall in the app" style="view-transition-name: cv-Case4; display: block; width: 100%; height: 240px; object-fit: cover"><div class="cmeta" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 16px; font-weight: 500; line-height: normal"><span class="cm-name" style="color: #1E1E1E">AI background removal for artworks</span><span aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span style="color: #6D6D6D">Smartist</span><span class="cm-d2" aria-hidden="true" style="width: 3px; height: 3px; border-radius: 50%; background: #6D6D6D; flex: 0 0 3px"></span><span class="cm-yr" style="color: #6D6D6D"><span class="cm-sh">Shipped </span>2024</span></div></a></div>
+</div>
+</div>
+</div>
+</main>
+<div></div>
+</div>
+<div class="fgap" style="flex: 1 0 160px"></div>
+<footer class="foot" style="position: relative; margin: 0 16px 16px; background: #CF453A; color: #F8EFDE; min-height: 263px; box-sizing: border-box; padding: 66px 40px 65px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 32px">
+<div style="display: flex; flex-direction: column; gap: 40px">
+<div class="foot-title" style="font-family: 'DeFonte', 'DM Sans', sans-serif; font-size: 72px; line-height: 0.9">Ready to talk?</div>
+<div class="foot-links" style="display: flex; flex-wrap: wrap; gap: 40px; font-family: 'DeFonte', 'DM Sans', sans-serif; font-size: 18px; line-height: normal"><a href="https://www.linkedin.com/in/viktoriia-lytvynenko/" target="_blank" rel="noopener">LinkedIn</a><a href="https://t.me/litvika" target="_blank" rel="noopener">Telegram</a><a class="em-copy" href="mailto:viviuiux@gmail.com" data-tip="">Email</a></div>
+</div>
+<div class="foot-right" style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; gap: 40px">
+<a class="totop" href="#top" aria-label="Back to top" style="display: block; width: 64px; height: 64px"><img src="/_blob/30977e6bb2a225e7101dab760e90c0bf" alt="" width="64" height="64" style="display: block; width: 64px; height: 64px"></a>
+<div style="font-size: 14px; line-height: normal; color: rgba(248,239,222,0.7)">© 2026 Viktoriia Polotniuk</div>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"cursor":{"editor":"enum","options":["drawn","square + label","dust + drawn","dust","tail + drawn","tail","none"],"default":"drawn","section":"Cursor"},"$preview":{"width":1280,"height":5962}}'>
+const UL = {"Work": {"u": "/_blob/70b97cd764b5638fdaaabbf91846dda8", "w": 51, "h": 6}, "Experiments": {"u": "/_blob/2a4a56b4a30395869b26d71e82775caa", "w": 97, "h": 6}, "About me": {"u": "/_blob/5a0dafca40f6f5f880f0e206891970f4", "w": 80, "h": 6}, "Resume": {"u": "/_blob/b9022cf4800f7730de122cc446fa53d8", "w": 68, "h": 5}, "My Impact": {"u": "/_blob/6ac3b567e8b2ac17c2db40ca884b8ee3", "w": 87, "h": 8}, "Context": {"u": "/_blob/3417e8316bef9eaeecb3125d10e02e7f", "w": 67, "h": 5}, "Challenge": {"u": "/_blob/57bc46e82faa7b3ce24195e57f96770f", "w": 81, "h": 6}, "Process": {"u": "/_blob/810982e38ea2b0392e1374f9d940bc08", "w": 65, "h": 5}, "App redesign": {"u": "/_blob/65dddd8a5ebabdb176f9357890e44fbc", "w": 102, "h": 6}, "Design system": {"u": "/_blob/c1fcecf9dd101d088fd449a151243081", "w": 110, "h": 7}, "Behind the scenes": {"u": "/_blob/1ceb6c44f5350ade2559f0c6aa22b849", "w": 132, "h": 9}, "Key decisions": {"u": "/_blob/8ce8978e0c1776b5da9c02feae89a6a2", "w": 106, "h": 7}, "New experience": {"u": "/_blob/c4b8bd14b9e63361d41d902e4ce16f89", "w": 120, "h": 8}, "Outcome": {"u": "/_blob/4d6c1474c2b07cdb466b2b7ee612de29", "w": 75, "h": 6}, "What’s next": {"u": "/_blob/73f259649c7aa62e6a84939d091dbc0b", "w": 93, "h": 6}};
+class Component extends DCLogic {
+componentDidMount() {
+// A case always opens at the top — the browser must not restore the old scroll position when you come back to a case you have read before
+// (only a #section link may jump inside the case). Also covers pages restored from the back/forward cache.
+{
+  try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
+  const toTop = () => { if (!location.hash && innerHeight < 1400) window.scrollTo(0, 0); };
+  toTop(); requestAnimationFrame(toTop);
+  addEventListener('pageshow', (e) => { if (e.persisted) toTop(); });
+}
+
+// Mobile menu: closes when you tap a link in it (also the page you are already on) and when a page comes back from the back/forward cache
+{
+  const cb = document.getElementById('mnav');
+  if (cb) {
+    document.querySelectorAll('.mnav a').forEach((a) => a.addEventListener('click', () => { cb.checked = false; }));
+    addEventListener('pageshow', (e) => { if (e.persisted) cb.checked = false; });
+  }
+}
+
+// Mobile bottom navigation: hides with the header on a long scroll down (class hdr-hide), comes back on scroll up,
+// and hides near the end of the page so it never covers the footer links (not on canvas boards that show the whole page)
+{
+  const root = document.getElementById('top'), foot = document.querySelector('footer.foot');
+  if (root && foot && document.querySelector('.bnav')) {
+    const upd = () => { if (innerHeight > 1400) return root.classList.remove('at-end'); root.classList.toggle('at-end', foot.getBoundingClientRect().top < innerHeight - 60); };
+    addEventListener('scroll', upd, { passive: true }); addEventListener('resize', upd); upd();
+  }
+}
+
+// Email in the footer: copy the address on click and show "Email copied — address" for a moment.
+document.querySelectorAll('.foot a.em-copy').forEach(a => {
+  let t = 0;
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const addr = (a.getAttribute('href') || '').replace(/^mailto:/, '');
+    try { navigator.clipboard && navigator.clipboard.writeText(addr); } catch (err) {}
+    a.dataset.tip = 'Email copied — ' + addr;
+    a.classList.add('copied'); clearTimeout(t);
+    t = setTimeout(() => { a.classList.remove('copied'); setTimeout(() => { if (!a.classList.contains('copied')) a.dataset.tip = 'Copy email'; }, 220); }, 1800);
+  });
+});
+// before the click, hovering the link says what it does
+document.querySelectorAll('.foot a.em-copy').forEach(a => { if (!a.classList.contains('copied')) a.dataset.tip = 'Copy email'; });
+
+
+this.onScroll = this.onScroll.bind(this);
+if (true) { document.addEventListener('scroll', this.onScroll, true); this.onScroll(); }
+// Logo (and the mobile burger) hide once you have scrolled down past 200 px, and come back on any scroll up.
+const root = document.getElementById('top');
+let lastY = window.scrollY, down = 0;
+const onHdr = () => {
+  const y = window.scrollY;
+  if (!root) return;
+  root.classList.toggle('scrolled', y > 0);
+  // hide only after a longer scroll down (180 px in one go, and past 400 px from the top); any scroll up brings it back
+  if (y < lastY - 2) { root.classList.remove('hdr-hide'); down = 0; }
+  else if (y > lastY) { down += y - lastY; if (y > 400 && down > 180) root.classList.add('hdr-hide'); }
+  if (y < 400) root.classList.remove('hdr-hide');
+  lastY = y;
+};
+window.addEventListener('scroll', onHdr, { passive: true }); onHdr();
+
+// Reading progress (phones only, CSS): a 2 px red line along the bottom of the header grows as you read; it hides together with the header.
+{
+  const lg = document.querySelector('.pg .logo');
+  if (lg) {
+    const rp = document.createElement('i'); rp.className = 'rp'; rp.setAttribute('aria-hidden', 'true'); lg.append(rp);
+    const upd = () => { const m = document.documentElement.scrollHeight - innerHeight; rp.style.transform = 'scaleX(' + (m > 0 ? Math.min(1, Math.max(0, scrollY / m)) : 0) + ')'; };
+    addEventListener('scroll', upd, { passive: true }); addEventListener('resize', upd); upd();
+  }
+}
+
+// Image zoom in cases (lightbox): click a case image → it opens full screen over a page-coloured backdrop, with ← → between all images of the case and a counter (no caption — many images already have one inside).
+// Hover (mouse only): a small "expand" badge appears in the image corner; the cursor stays the normal one (hand only on real buttons).
+// Close: ✕, click on the backdrop, click / tap the image again, Esc. While open: pinch (phone) or trackpad pinch (desktop) zooms in more, drag to look around, double-click / double-tap toggles 2×; on phones swipe ← → for next / previous and swipe down to close.
+{
+  const imgs = [...document.querySelectorAll('img[width="600"]')];
+  if (imgs.length) {
+    const ARR = (d) => '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="' + (d < 0 ? 'M16 10H4.5M9 5.2 4.2 10 9 14.8' : 'M4 10h11.5M11 5.2l4.8 4.8-4.8 4.8') + '"/></svg>';
+    const EXP = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#1E1E1E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 3h4.5v4.5M15 3l-5 5M7.5 15H3v-4.5M3 15l5-5"/></svg>';
+    const lb = document.createElement('div'); lb.className = 'lb'; lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-modal', 'true'); lb.setAttribute('aria-label', 'Image viewer');
+    lb.innerHTML = '<div class="lb-stage"><img class="lb-img" alt=""></div><div class="lb-cnt"></div>'
+      + '<button class="lb-btn lb-prev" aria-label="Previous image">' + ARR(-1) + '</button><button class="lb-btn lb-next" aria-label="Next image">' + ARR(1) + '</button>'
+      + '<button class="lb-x" aria-label="Close"><span></span></button>';
+    const badge = document.createElement('div'); badge.className = 'lb-badge'; badge.innerHTML = EXP;
+    document.body.append(lb, badge);
+    const stage = lb.querySelector('.lb-stage'), big = lb.querySelector('.lb-img'), cnt = lb.querySelector('.lb-cnt'), xb = lb.querySelector('.lb-x');
+    let i = 0, on = false, s = 1, tx = 0, ty = 0, moved = false, lastTap = 0, ret = null, ct = 0;
+    const box = () => { const r = big.getBoundingClientRect(); return { cx: r.left + r.width / 2 - tx, cy: r.top + r.height / 2 - ty, w: r.width / s, h: r.height / s }; };
+    const apply = (anim) => {
+      if (s <= 1) { s = 1; tx = 0; ty = 0; } else { const b = box(), mx = Math.max(0, (b.w * s - innerWidth) / 2 + 24), my = Math.max(0, (b.h * s - innerHeight) / 2 + 24); tx = Math.max(-mx, Math.min(mx, tx)); ty = Math.max(-my, Math.min(my, ty)); }
+      big.style.transition = anim ? 'transform .25s ease, opacity .25s ease' : 'none';
+      big.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')';
+      lb.classList.toggle('zoomed', s > 1);
+    };
+    const zoomAt = (k, px, py, anim) => { const b = box(), ns = Math.max(1, Math.min(4, s * k)), r = ns / s; tx += (px - b.cx - tx) * (1 - r); ty += (py - b.cy - ty) * (1 - r); s = ns; apply(anim); };
+    const show = (n, dir) => {
+      i = (n + imgs.length) % imgs.length; s = 1; tx = ty = 0;
+      big.style.transition = 'none'; big.style.opacity = '0'; big.style.transform = 'translateX(' + (dir || 0) * 24 + 'px)';
+      big.onload = () => requestAnimationFrame(() => { big.style.transition = 'transform .3s ease, opacity .3s ease'; big.style.opacity = '1'; big.style.transform = 'none'; });
+      big.src = imgs[i].currentSrc || imgs[i].src; big.alt = imgs[i].alt || '';
+      if (big.complete) big.onload();
+      cnt.textContent = (i + 1) + ' / ' + imgs.length;
+      lb.classList.toggle('single', imgs.length < 2); lb.classList.remove('zoomed');
+    };
+    const placeX = () => { const bu = document.querySelector('.burger'), br = bu && bu.getBoundingClientRect();
+      if (br && br.width && getComputedStyle(bu).display !== 'none') { xb.style.top = Math.max(4, br.top) + 'px'; xb.style.left = br.left + 'px'; xb.style.right = 'auto'; }
+      else { xb.style.top = ''; xb.style.left = ''; xb.style.right = ''; } };
+    const open = (n) => { ret = document.activeElement; placeX(); show(n, 0); on = true; lb.classList.add('on'); document.documentElement.classList.add('lb-lock'); badge.classList.remove('on'); setTimeout(() => xb.focus({ preventScroll: true }), 50); };
+    const close = () => { if (!on) return; on = false; lb.classList.remove('on', 'zoomed'); document.documentElement.classList.remove('lb-lock'); if (ret && ret.focus) ret.focus({ preventScroll: true }); };
+    imgs.forEach((im, n) => {
+      im.dataset.zoom = ''; im.tabIndex = 0; im.setAttribute('aria-haspopup', 'dialog'); im.setAttribute('aria-label', 'Open image: ' + (im.alt || 'image'));
+      im.addEventListener('click', (e) => { e.preventDefault(); open(n); });
+      im.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(n); } });
+      // expand badge on hover (mouse only)
+      im.addEventListener('mouseenter', () => { if (!matchMedia('(hover: hover)').matches) return; const r = im.getBoundingClientRect(); badge.style.left = (r.right - 52) + 'px'; badge.style.top = (r.top + 12) + 'px'; badge.classList.add('on'); });
+      im.addEventListener('mouseleave', () => badge.classList.remove('on'));
+    });
+    addEventListener('scroll', () => badge.classList.remove('on'), { passive: true });
+    lb.querySelector('.lb-prev').addEventListener('click', (e) => { e.stopPropagation(); show(i - 1, -1); });
+    lb.querySelector('.lb-next').addEventListener('click', (e) => { e.stopPropagation(); show(i + 1, 1); });
+    xb.addEventListener('click', (e) => { e.stopPropagation(); close(); });
+    lb.addEventListener('click', (e) => { if (moved) { moved = false; return; } if (e.target === lb || e.target === stage) close(); });
+    document.addEventListener('keydown', (e) => { if (!on) return;
+      if (e.key === 'Escape') close(); else if (e.key === 'ArrowLeft') show(i - 1, -1); else if (e.key === 'ArrowRight') show(i + 1, 1); });
+    // desktop: trackpad pinch = wheel + ctrlKey → zoom; two-finger scroll pans when zoomed in
+    lb.addEventListener('wheel', (e) => { e.preventDefault();
+      if (e.ctrlKey) zoomAt(Math.exp(-e.deltaY * 0.012), e.clientX, e.clientY, false);
+      else if (s > 1) { tx -= e.deltaX; ty -= e.deltaY; apply(false); } }, { passive: false });
+    // a second click / tap on the image closes it (after a short wait, so a double-click can still zoom)
+    big.addEventListener('click', (e) => { e.stopPropagation(); if (moved) { moved = false; return; } if (s > 1 || e.detail > 1) return;
+      clearTimeout(ct); ct = setTimeout(() => { if (on && s === 1) close(); }, 300); });
+    big.addEventListener('dblclick', (e) => { e.preventDefault(); clearTimeout(ct); if (s > 1) { s = 1; apply(true); } else zoomAt(2, e.clientX, e.clientY, true); });
+    let drag = null;
+    big.addEventListener('mousedown', (e) => { if (s > 1) { e.preventDefault(); drag = [e.clientX, e.clientY, tx, ty]; moved = false; } });
+    addEventListener('mousemove', (e) => { if (!drag) return; tx = drag[2] + e.clientX - drag[0]; ty = drag[3] + e.clientY - drag[1]; moved = true; apply(false); });
+    addEventListener('mouseup', () => { drag = null; });
+    // touch: pinch, drag when zoomed in, swipe ← → / ↓, double-tap 2×
+    let t0 = null; const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    stage.addEventListener('touchstart', (e) => { const T = e.touches; moved = false;
+      if (T.length === 2) t0 = { d: dist(T[0], T[1]), s, tx, ty, mx: (T[0].clientX + T[1].clientX) / 2, my: (T[0].clientY + T[1].clientY) / 2 };
+      else if (T.length === 1) t0 = { x: T[0].clientX, y: T[0].clientY, tx, ty, one: true, dx: 0, dy: 0 }; }, { passive: true });
+    stage.addEventListener('touchmove', (e) => { if (!t0) return; const T = e.touches; e.preventDefault(); moved = true;
+      if (T.length === 2 && !t0.one) { s = t0.s; tx = t0.tx; ty = t0.ty; zoomAt(dist(T[0], T[1]) / t0.d, t0.mx, t0.my, false); }
+      else if (T.length === 1 && t0.one) { t0.dx = T[0].clientX - t0.x; t0.dy = T[0].clientY - t0.y;
+        if (s > 1) { tx = t0.tx + t0.dx; ty = t0.ty + t0.dy; apply(false); }
+        else { big.style.transition = 'none'; const hz = Math.abs(t0.dx) > Math.abs(t0.dy); big.style.transform = hz ? 'translateX(' + t0.dx + 'px)' : 'translateY(' + Math.max(0, t0.dy) + 'px)'; lb.style.setProperty('--fade', hz ? 1 : 1 - Math.min(0.5, Math.max(0, t0.dy) / 400)); } } }, { passive: false });
+    stage.addEventListener('touchend', (e) => { if (!t0 || e.touches.length) return; const t = t0; t0 = null; lb.style.removeProperty('--fade');
+      if (t.one && s === 1 && moved) {
+        if (Math.abs(t.dx) > 50 && Math.abs(t.dx) > Math.abs(t.dy)) return show(i + (t.dx < 0 ? 1 : -1), t.dx < 0 ? 1 : -1);
+        if (t.dy > 90) return close();
+        apply(true); return; }
+      if (!moved) { const now = Date.now(), c = e.changedTouches[0];
+        if (now - lastTap < 300) { clearTimeout(ct); if (s > 1) { s = 1; apply(true); } else zoomAt(2, c.clientX, c.clientY, true); lastTap = 0; } else lastTap = now; } });
+  }
+}
+
+// Cursor effects (switch in the canvas: board props → Cursor). Desktop / mouse only.
+if (window.matchMedia && matchMedia('(pointer: fine)').matches) {
+  const self = this, RED = '#CF453A', html = document.documentElement;
+  const mode = () => ((self.props && self.props.cursor) || 'drawn');
+  const cv = document.createElement('canvas'); cv.className = 'cur-cv';
+  document.body.append(cv);
+  const ctx = cv.getContext('2d');
+  const fit = () => { const d = window.devicePixelRatio || 1; cv.width = innerWidth * d; cv.height = innerHeight * d; ctx.setTransform(d, 0, 0, d, 0, 0); };
+  fit(); window.addEventListener('resize', fit);
+  // only case cards get a label; other links just make the square a bit bigger
+  const labelFor = (el) => !el ? '' : (el.dataset.cursor || (el.classList.contains('card-link') ? 'see case' : ''));
+  let x = -100, y = -100, raf = 0, last = null, pts = [], parts = [], hover = '', link = false, light = false;
+  // square sits exactly on the pointer: moved inside the mousemove event itself, no easing, no frame delay
+  // square and label are painted on the canvas, so moving the mouse never changes the page's DOM
+  // (DOM changes on every mousemove made the canvas prototype swallow the first click)
+  const place = () => {
+    const isSq = mode() === 'square + label', BG = '#F8EFDE';
+    ctx.globalAlpha = 1;
+    if (isSq) { const s = link ? 15 : 10; ctx.fillStyle = light ? BG : RED; ctx.fillRect(x - s / 2, y - s / 2, s, s); }
+    if (hover) {
+      ctx.font = '16px DeFonte, sans-serif'; ctx.textBaseline = 'top'; ctx.fillStyle = light ? BG : RED;
+      ctx.fillText(hover, isSq ? x + 14 : x + 20, isSq ? y - 9 : y + 12);   // right of the square / right of the arrow's tail
+    }
+  };
+  const loop = () => {
+    const m = mode(), now = performance.now();
+    html.classList.toggle('cur-drawn', m.includes('drawn'));
+    html.classList.toggle('cur-none', m === 'square + label');
+    // square + label
+    const on = m === 'square + label';
+    // tail + dust + square + label on one canvas
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    if (m.includes('tail')) {
+      pts = pts.filter((q) => now - q.t < 480);
+      ctx.strokeStyle = RED; ctx.lineCap = ctx.lineJoin = 'round';
+      for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1], b = pts[i], k = 1 - (now - b.t) / 480;
+        ctx.globalAlpha = Math.max(0, k); ctx.lineWidth = 0.6 + 3 * k;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+    } else pts = [];
+    if (m.includes('dust')) {
+      parts = parts.filter((q) => now - q.t < q.life);
+      ctx.fillStyle = RED;
+      for (const q of parts) {
+        const age = (now - q.t) / 16;
+        ctx.globalAlpha = 0.85 * (1 - (now - q.t) / q.life);
+        ctx.beginPath(); ctx.arc(q.x + q.vx * age, q.y + q.vy * age, q.r, 0, 6.283); ctx.fill();
+      }
+    } else parts = [];
+    ctx.globalAlpha = 1;
+    if (m !== 'none') place();   // "see case" label works with every variant except none
+    raf = (pts.length || parts.length) ? requestAnimationFrame(loop) : 0;
+  };
+  const kick = () => { if (!raf) raf = requestAnimationFrame(loop); };
+  window.addEventListener('mousemove', (e) => {
+    const now = performance.now(), m = mode();
+    x = e.clientX; y = e.clientY;
+    if (m.includes('tail')) pts.push({ x, y, t: now }), pts = pts.slice(-40);
+    if (m.includes('dust')) {
+      const d = last ? Math.hypot(x - last[0], y - last[1]) : 0, n = Math.min(10, 3 + Math.round(d / 4));
+      for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, r = Math.random() * 7; parts.push({ x: x + Math.cos(a) * r, y: y + Math.sin(a) * r, vx: (Math.random() - 0.5) * 0.5, vy: -(0.2 + Math.random() * 0.8), r: 0.4 + Math.random() * 1.1, t: now, life: 700 + Math.random() * 600 }); }
+      if (parts.length > 300) parts = parts.slice(-300);
+    }
+    last = [x, y];
+    const el = e.target.closest && e.target.closest('a, button, label, [data-cursor]');
+    hover = labelFor(el); link = !!el;
+    light = !!(e.target.closest && e.target.closest('.foot, [data-cursor-light]'));   // on red areas the square turns page-colour
+    kick();
+  });
+    // scrolling moves the page under a still mouse: re-check what is under the pointer (label / link state),
+  // and show the plain arrow while the page is moving so the "hand" never sticks to a non-clickable spot
+  let scrT = 0;
+  const recheck = () => { if (x < 0) return; const t = document.elementFromPoint(x, y); const el = t && t.closest && t.closest('a, button, label, [data-cursor]');
+    hover = labelFor(el); link = !!el; light = !!(t && t.closest && t.closest('.foot, [data-cursor-light]')); kick(); };
+  window.addEventListener('scroll', () => { html.classList.add('cur-scrolling'); recheck(); clearTimeout(scrT);
+    scrT = setTimeout(() => { html.classList.remove('cur-scrolling'); recheck(); }, 160); }, { passive: true, capture: true });
+document.addEventListener('mouseleave', () => { x = y = -100; hover = ''; kick(); });
+  kick();
+}
+
+
+}
+componentWillUnmount() { document.removeEventListener('scroll', this.onScroll, true); }
+items() { return JSON.parse('[{"id": "impact", "label": "My Impact"}, {"id": "context", "label": "Context"}, {"id": "challenge", "label": "Challenge"}, {"id": "process", "label": "Process"}, {"id": "scenes", "label": "Behind the scenes"}, {"id": "decisions", "label": "Key decisions"}, {"id": "experience", "label": "New experience"}, {"id": "outcome", "label": "Outcome"}]'); }
+onScroll() {
+const items = this.items();
+let active = items[0].id;
+for (const it of items) {
+const el = it.id && document.getElementById(it.id);
+if (el && el.getBoundingClientRect().top < 200) active = it.id;
+}
+if ((this.state || {}).active !== active) this.setState({ active: active });
+}
+renderVals() {
+const items = this.items();
+const active = (this.state || {}).active || items[0].id;
+return {
+navLabel: 'Case sections',
+nav: items.map((it) => {
+const on = it.active === undefined ? it.id === active : it.active;
+const u = UL[it.label] || UL['Context'];
+return {
+href: it.href || ('#' + it.id),
+target: /^https?:/.test(it.href || '') ? '_blank' : '_self',
+rel: /^https?:/.test(it.href || '') ? 'noopener' : '',
+label: it.label,
+active: on,
+line: u.u, lw: u.w, lh: u.h,
+lineStyle: 'position: absolute; left: -8px; top: ' + (24 - Math.round(u.h / 2)) + 'px; width: ' + u.w + 'px; height: ' + u.h + 'px; pointer-events: none',
+style: on ? 'color: #CF453A' : ''
+};
+})
+};
+}
+}
+</script>
+</body>
+</html>
